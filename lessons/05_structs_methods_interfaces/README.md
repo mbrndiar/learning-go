@@ -47,7 +47,8 @@ receiver, or case at a time and re-run.
 ## 🚧 Common mistakes
 
 - **Positional literals that outlive the struct's shape.** `Point{3, 4}`
-  breaks silently if a field is inserted between `X` and `Y` later. Prefer
+  depends on declaration order; reordering same-typed fields can silently
+  change meaning, while adding or removing a field breaks compilation. Prefer
   keyed literals (`Point{X: 3, Y: 4}`) once a struct is used outside the file
   that defines it.
 - **Mixing receiver kinds on one type.** Calling one method with a value

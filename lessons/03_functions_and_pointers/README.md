@@ -69,8 +69,10 @@ go build ./lessons/03_functions_and_pointers/...
   solves a smaller sub-problem, and the performance cost of naive recursion
   (recomputing the same sub-problems) versus an iterative or memoized
   approach.
-- Value semantics: function parameters receive a copy, so mutating a
-  parameter never affects the caller's original variable.
+- Value semantics: every function parameter receives a copy. Reassigning that
+  local parameter never changes the caller's variable, but copied slices,
+  maps, pointers, channels, and functions can still refer to shared data.
+  Module 4 develops that distinction for slices and maps.
 - Pointers: `&x` takes the address of `x`; `*p` dereferences a pointer to
   read or write the value it points to; a pointer's zero value is `nil`, and
   dereferencing a `nil` pointer panics.

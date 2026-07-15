@@ -21,7 +21,7 @@ const currentSchemaVersion = 1
 // are never reused, even after tasks are removed.
 type document struct {
 	Version int    `json:"version"`
-	NextID  int    `json:"next_id"`
+	NextID  int64  `json:"next_id"`
 	Tasks   []Task `json:"tasks"`
 }
 
@@ -61,7 +61,7 @@ func (s *FileStorage) List(ctx context.Context) ([]Task, error) {
 }
 
 // Get returns the task with the given identifier, or ErrTaskNotFound.
-func (s *FileStorage) Get(ctx context.Context, id int) (Task, error) {
+func (s *FileStorage) Get(ctx context.Context, id int64) (Task, error) {
 	if err := ctx.Err(); err != nil {
 		return Task{}, err
 	}
@@ -110,7 +110,7 @@ func (s *FileStorage) Add(ctx context.Context, title string) (Task, error) {
 }
 
 // Complete marks the task with the given identifier as done.
-func (s *FileStorage) Complete(ctx context.Context, id int) (Task, error) {
+func (s *FileStorage) Complete(ctx context.Context, id int64) (Task, error) {
 	if err := ctx.Err(); err != nil {
 		return Task{}, err
 	}
@@ -136,7 +136,7 @@ func (s *FileStorage) Complete(ctx context.Context, id int) (Task, error) {
 
 // Remove deletes the task with the given identifier. The monotonic next
 // identifier is preserved so the removed id is never reused.
-func (s *FileStorage) Remove(ctx context.Context, id int) error {
+func (s *FileStorage) Remove(ctx context.Context, id int64) error {
 	if err := ctx.Err(); err != nil {
 		return err
 	}
@@ -221,8 +221,8 @@ func validateDocument(doc *document) error {
 		doc.Version = currentSchemaVersion
 	}
 
-	seen := make(map[int]struct{}, len(doc.Tasks))
-	maxID := 0
+	seen := make(map[int64]struct{}, len(doc.Tasks))
+	var maxID int64
 	for i, task := range doc.Tasks {
 		if err := task.Validate(); err != nil {
 			return fmt.Errorf("task at index %d: %w", i, err)

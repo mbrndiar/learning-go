@@ -8,6 +8,11 @@
 //	go run ./lessons/09_tooling_cli_observability/03_race_detector                  # safe path (default)
 //	go run ./lessons/09_tooling_cli_observability/03_race_detector -mode=race       # unsynchronized, wrong result likely
 //	go run -race ./lessons/09_tooling_cli_observability/03_race_detector -mode=race # race detector reports the data race
+//
+// This lesson previews goroutines, sync.WaitGroup, and sync.Mutex so you can
+// use the race detector in a realistic example. Module 10 introduces those
+// concurrency primitives from first principles; focus here on the difference
+// between an ordinary run and a -race run.
 package main
 
 import (

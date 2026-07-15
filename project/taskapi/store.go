@@ -60,8 +60,10 @@ func OpenSQLiteStore(ctx context.Context, dsn string) (*SQLiteStore, error) {
 		return nil, fmt.Errorf("taskapi: open database: %w", err)
 	}
 
-	// SQLite permits a single writer; a modest pool avoids "database is locked"
-	// errors while keeping the store usable from concurrent HTTP handlers.
+	// SQLite permits only one writer at a time. Restricting database/sql to one
+	// connection serializes this teaching application's reads and writes,
+	// avoiding competing transactions and "database is locked" errors while
+	// the HTTP server itself remains safe to call concurrently.
 	db.SetMaxOpenConns(1)
 
 	store := &SQLiteStore{db: db}

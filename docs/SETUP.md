@@ -48,12 +48,15 @@ go mod download
 
 ## 5. Choose an editor
 
-- VS Code with the official Go extension
-- GoLand
-- Neovim, Vim, Emacs, or another editor configured with `gopls`
+- [VS Code with the official Go extension](https://marketplace.visualstudio.com/items?itemName=golang.Go)
+- [GoLand](https://www.jetbrains.com/go/)
+- Neovim, Vim, Emacs, or another editor configured with
+  [`gopls`](https://go.dev/gopls/)
 
-The Go extension normally installs `gopls`, `dlv`, and related tools when they
-are first needed.
+The Go extension normally installs `gopls`,
+[Delve (`dlv`)](https://github.com/go-delve/delve/tree/master/Documentation),
+and related tools when they are first needed. The official
+[`gopls` editor guide](https://go.dev/gopls/editor/) covers other editors.
 
 ## 6. Run the first lesson
 

@@ -40,8 +40,8 @@ import (
 //	}
 //
 // Multiple goroutines write total without a Mutex or atomic operation, so
-// the result is undefined and `go test -race` reports it as a race. Lesson
-// 06 (Mutex) and lesson 07 (atomic) show the two standard fixes.
+// the result is not reliably determined and `go test -race` reports it as a
+// race. Lesson 06 (Mutex) and lesson 07 (atomic) show the two standard fixes.
 
 // slowTask simulates work that respects cancellation: it either finishes,
 // or notices ctx is done and returns early. This is the fix for the leaky
@@ -73,10 +73,11 @@ func runWithLeakPrevention(ctx context.Context, work <-chan struct{}) error {
 	}
 }
 
-// goroutineCountStable polls runtime.NumGoroutine() until it stops
-// climbing or a bound on attempts is reached. It is used to demonstrate
-// that a fixed function call does not leave extra goroutines running,
-// without depending on any fixed sleep duration.
+// goroutineCountStable polls runtime.NumGoroutine() until it stops climbing or
+// a bound on attempts is reached. Goroutine counts can change for unrelated
+// runtime work, so this is a best-effort observation for the demo, not a proof.
+// The done channel in runWithLeakPrevention is the actual synchronization
+// guarantee that the goroutine returned.
 func goroutineCountStable() int {
 	last := runtime.NumGoroutine()
 	for i := 0; i < 50; i++ {

@@ -68,15 +68,15 @@ go build ./lessons/01_basics/...
   compound assignment (`+= *=`) operators.
 - Operator precedence and using parentheses to make intent explicit.
 - Strings as UTF-8-encoded, immutable byte sequences; the difference between
-  `len(s)` (bytes) and `utf8.RuneCountInString(s)` (characters); converting
-  between `string`, `[]byte`, and `[]rune`; and classifying runes with the
-  `unicode` package.
+  `len(s)` (bytes) and `utf8.RuneCountInString(s)` (Unicode code points, not
+  necessarily user-perceived characters); converting between `string`,
+  `[]byte`, and `[]rune`; and classifying runes with the `unicode` package.
 
 ## ⚠️ Common mistakes
 
-- Assuming `len(s)` counts characters. It counts bytes; for text that may
-  contain non-ASCII characters, convert to `[]rune` or use
-  `utf8.RuneCountInString` instead.
+- Assuming `len(s)` counts characters. It counts bytes; convert to `[]rune` or
+  use `utf8.RuneCountInString` to work with Unicode code points. A visible
+  grapheme such as an emoji sequence can still contain several runes.
 - Expecting `/` between two integers to produce a fractional result. Integer
   division truncates; convert at least one operand to `float64` first.
 - Forgetting that Go requires an explicit conversion between numeric types,

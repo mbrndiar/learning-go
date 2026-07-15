@@ -10,6 +10,8 @@ import (
 	"slices"
 )
 
+// Structs are introduced in module 5. Here player simply supplies two fields
+// for demonstrating a multi-field comparison with slices.SortFunc.
 type player struct {
 	name  string
 	score int

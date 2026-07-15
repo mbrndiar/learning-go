@@ -30,15 +30,15 @@ genuine attempt.
    every contact *before* touching the filesystem. Create (or truncate) the
    file, `defer` closing it, and encode the contacts as indented JSON,
    wrapping any error with `%w`.
-5. Declare `ErrDuplicateEmail` and implement
+5. Using the provided `ErrDuplicateEmail`, implement
    `AddContact(path string, c Contact) error`. Treat a missing file as an
    empty address book (check with `errors.Is(err, os.ErrNotExist)`), reject
    duplicate emails by wrapping `ErrDuplicateEmail` with `%w`, and otherwise
    append and save.
-6. Declare `ErrNotFound` and implement
-   `FindByEmail(contacts []Contact, email string) (Contact, error)`,
-   wrapping `ErrNotFound` with `%w` and including the email in the message
-   when nothing matches.
+6. Using the provided `ErrNotFound`, implement
+   `FindByEmail(contacts []Contact, email string) (Contact, error)`, wrapping
+   `ErrNotFound` with `%w` and including the email in the message when nothing
+   matches.
 
 ## 🔍 What this covers
 

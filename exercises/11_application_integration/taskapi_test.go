@@ -30,6 +30,7 @@ func TestTaskValidate(t *testing.T) {
 		{"whitespace-only title", Task{Title: "   "}, true},
 		{"title too long", Task{Title: strings.Repeat("a", maxTitleLen+1)}, true},
 		{"title at max length", Task{Title: strings.Repeat("a", maxTitleLen)}, false},
+		{"multibyte title counts code points", Task{Title: strings.Repeat("é", maxTitleLen)}, false},
 		{"due date in the past", Task{Title: "Write report", DueDate: &past}, true},
 	}
 	for _, tt := range tests {

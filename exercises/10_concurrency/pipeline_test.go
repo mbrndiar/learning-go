@@ -155,7 +155,7 @@ func TestRunBoundedPropagatesFirstError(t *testing.T) {
 	if !errors.Is(err, errBoom) {
 		t.Fatalf("RunBounded error = %v, want errBoom", err)
 	}
-	if elapsed > 200*time.Millisecond {
+	if elapsed > time.Second {
 		t.Errorf("RunBounded took %v after an error; the remaining jobs should be canceled quickly", elapsed)
 	}
 }

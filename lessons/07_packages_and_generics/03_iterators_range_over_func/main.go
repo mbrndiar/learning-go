@@ -9,12 +9,16 @@ import (
 	"slices"
 )
 
-// Range returns an iter.Seq[int]: a function that, when called with a
-// "yield" callback, produces a sequence of int values by calling yield once
-// per value. Returning false from yield asks the sequence to stop early
-// (used when a range loop hits a break). Writing an iterator this way is
-// what lets "for v := range Range(...)" work below, without building an
-// intermediate slice first.
+// Range builds an iterator in three layers:
+//  1. Range itself returns a function (an iter.Seq[int]).
+//  2. The range loop calls that function with a compiler-provided yield
+//     callback.
+//  3. The iterator calls yield once per value; false means the loop stopped
+//     early, for example with break.
+//
+// This is the same closure idea as module 3, with the callback protocol
+// standardized so "for v := range Range(...)" works without an intermediate
+// slice.
 func Range(start, end int) iter.Seq[int] {
 	return func(yield func(int) bool) {
 		for v := start; v < end; v++ {

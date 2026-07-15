@@ -32,7 +32,7 @@ var (
 
 // Task is the domain model shared across storage backends.
 type Task struct {
-	ID    int    `json:"id"`
+	ID    int64  `json:"id"`
 	Title string `json:"title"`
 	Done  bool   `json:"done"`
 }

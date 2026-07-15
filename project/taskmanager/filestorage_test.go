@@ -246,7 +246,7 @@ func TestFileStorageConcurrentAddsAreSerialized(t *testing.T) {
 		t.Fatalf("List() = %d tasks, want %d", len(tasks), workers)
 	}
 
-	ids := make(map[int]struct{}, len(tasks))
+	ids := make(map[int64]struct{}, len(tasks))
 	for _, task := range tasks {
 		if _, dup := ids[task.ID]; dup {
 			t.Fatalf("duplicate id %d after concurrent adds", task.ID)

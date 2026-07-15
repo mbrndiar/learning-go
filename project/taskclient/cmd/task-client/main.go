@@ -140,11 +140,11 @@ func runRemove(ctx context.Context, client *taskclient.Client, stdout io.Writer,
 	return nil
 }
 
-func parseID(args []string) (int, error) {
+func parseID(args []string) (int64, error) {
 	if len(args) != 1 {
 		return 0, errors.New("exactly one id argument is required")
 	}
-	id, err := strconv.Atoi(args[0])
+	id, err := strconv.ParseInt(args[0], 10, 64)
 	if err != nil {
 		return 0, fmt.Errorf("invalid id %q: %w", args[0], err)
 	}

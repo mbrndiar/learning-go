@@ -35,8 +35,10 @@ with the `go` keyword. Goroutines are cheap (a few kilobytes of stack that
 grows as needed), so Go programs routinely run thousands of them. But cheap
 does not mean automatic: `go f()` returns immediately, and `main` can exit
 long before `f` finishes. Nothing "joins" a goroutine implicitly. You always
-need an explicit synchronization point: a channel receive, a
-`sync.WaitGroup.Wait()`, or a `context.Done()` signal.
+need an explicit completion signal: receive a result or dedicated `done`
+value, close a channel owned by the goroutine, or wait with
+`sync.WaitGroup.Wait()`. A closed `context.Done()` requests cancellation; it
+does **not** prove the goroutine observed that request or returned.
 
 A **channel** is a typed conduit for passing values between goroutines. It is
 also the language's built-in synchronization primitive: an **unbuffered**
@@ -56,10 +58,10 @@ run the program. **Closing** a channel (`close(ch)`) tells every receiver "no
 more values are coming"; a `range` loop over a channel exits automatically
 once it is closed and drained, and a receive using the comma-ok form
 (`v, ok := <-ch`) reports `ok == false` once that happens. Ownership is a
-strict rule: only the single goroutine that sends on a channel should close
-it, and only after its last send. Closing a channel you only read from, or
-closing the same channel twice, or sending on an already-closed channel, are
-all bugs — the last two panic immediately.
+strict rule: the sending side owns closure. With one producer it usually
+closes the channel itself; with several producers, a coordinator closes it
+after all senders finish. A receiver must not close a channel merely to stop
+receiving. Closing twice or sending after close panics immediately.
 
 `select` lets a goroutine wait on several channel operations at once and
 proceeds with whichever becomes ready first; if more than one is ready
@@ -81,6 +83,12 @@ single value, useful for simple counters and flags, but it only makes one
 operation indivisible — reach for a `Mutex` as soon as you need to update
 several related fields together or run a check-then-act sequence.
 
+These primitives also define **happens-before** relationships: a channel send
+happens before the matching receive completes, closing a channel happens
+before a receive observes it closed, and a goroutine's `Done` happens before
+`Wait` returns. Those guarantees make earlier writes visible after the
+synchronization point. Time passing or `time.Sleep` creates no such guarantee.
+
 A **bounded worker pool** starts a fixed number of worker goroutines that all
 read from one shared jobs channel, capping how much work runs concurrently
 no matter how many jobs are queued. This keeps memory and CPU use predictable
@@ -98,8 +106,8 @@ A **goroutine leak** happens when a goroutine blocks forever — usually
 sending on or receiving from a channel that will never be ready again — and
 never returns, so it is never garbage collected. A **data race** happens
 when two goroutines access the same memory location without synchronization
-and at least one of them writes; the outcome becomes undefined, and the
-program's behavior can change between runs or hosts. `go test -race`
+and at least one of them writes; the result is not reliably determined, and
+the program's behavior can change between runs or hosts. `go test -race`
 instruments your code to detect races at runtime; it does not detect
 leaks, so leak prevention is a design discipline (always give every
 goroutine a clear owner and a guaranteed way to stop) rather than a tool you
@@ -169,8 +177,8 @@ go test -race ./lessons/10_concurrency/...
   associated with the context and its timers.
 - **Proving a fix with `time.Sleep` instead of a real signal.** A sleep
   might "usually" be long enough, but it is not deterministic; wait on a
-  channel, `WaitGroup`, or `context.Done()` that the goroutine itself
-  signals.
+  result/done channel or `WaitGroup` that confirms completion. `ctx.Done()`
+  alone confirms only that cancellation was requested.
 
 ## ❓ Review questions
 

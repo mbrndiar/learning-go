@@ -30,7 +30,7 @@ const maxErrorBodyBytes = 4 << 10
 
 // Task is the wire representation of a task exchanged with the API.
 type Task struct {
-	ID    int    `json:"id"`
+	ID    int64  `json:"id"`
 	Title string `json:"title"`
 	Done  bool   `json:"done"`
 }
@@ -77,7 +77,9 @@ type Client struct {
 	httpClient *http.Client
 }
 
-// Option configures a Client during construction.
+// Option configures a Client during construction. Functional options keep New's
+// required inputs obvious and let callers select independent optional behavior
+// without a constructor containing many positional parameters.
 type Option func(*Client)
 
 // WithHTTPClient overrides the HTTP client used for requests. It is primarily
@@ -148,7 +150,7 @@ func (c *Client) List(ctx context.Context) ([]Task, error) {
 
 // Get returns the task with the given identifier. It reports ErrNotFound when
 // the task does not exist.
-func (c *Client) Get(ctx context.Context, id int) (Task, error) {
+func (c *Client) Get(ctx context.Context, id int64) (Task, error) {
 	if id <= 0 {
 		return Task{}, fmt.Errorf("taskclient: task id must be positive, got %d", id)
 	}
@@ -181,7 +183,7 @@ func (c *Client) Add(ctx context.Context, title string) (Task, error) {
 
 // Complete marks the task with the given identifier as done and returns the
 // updated task. It reports ErrNotFound when the task does not exist.
-func (c *Client) Complete(ctx context.Context, id int) (Task, error) {
+func (c *Client) Complete(ctx context.Context, id int64) (Task, error) {
 	if id <= 0 {
 		return Task{}, fmt.Errorf("taskclient: task id must be positive, got %d", id)
 	}
@@ -197,7 +199,7 @@ func (c *Client) Complete(ctx context.Context, id int) (Task, error) {
 
 // Remove deletes the task with the given identifier. It reports ErrNotFound
 // when the task does not exist.
-func (c *Client) Remove(ctx context.Context, id int) error {
+func (c *Client) Remove(ctx context.Context, id int64) error {
 	if id <= 0 {
 		return fmt.Errorf("taskclient: task id must be positive, got %d", id)
 	}

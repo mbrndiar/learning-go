@@ -50,6 +50,28 @@ go run ./lessons/07_packages_and_generics/04_avoiding_premature_abstraction
 Lesson 1 contains two supporting packages, `catalog/` and `internal/pricing/`,
 that `main.go` imports; read all three files together.
 
+## 🧰 Module and dependency workflow
+
+A **package** is one directory of Go source. A **module** is the versioned unit
+rooted at a `go.mod` file and can contain many packages. The module path plus a
+package's directory determines its import path.
+
+For a new standalone project, the practical lifecycle is:
+
+```bash
+go mod init example.com/myapp              # create go.mod once
+go get example.com/dependency@v1.2.3       # add or update a dependency
+go mod tidy                                # match go.mod/go.sum to imports
+go mod download                            # pre-download declared modules
+go list -m all                             # inspect selected module versions
+```
+
+`go.sum` records cryptographic checksums for downloaded module content; it is
+not a lockfile that pins every selected version. Commit both `go.mod` and
+`go.sum`, prefer explicit versions in reproducible automation, and review their
+diff whenever dependencies change. See the official
+[Go module reference](https://go.dev/ref/mod).
+
 ## 🚧 Common mistakes
 
 - **Confusing the module path with a package's directory path.** An import
@@ -91,3 +113,5 @@ that `main.go` imports; read all three files together.
    third case appeared?
 6. What cost does the `aggregate` combinator in lesson 4 impose on callers
    compared with `Sum`, even though both are technically correct?
+7. What is the difference between a package and a module, and what roles do
+   `go get`, `go mod tidy`, and `go.sum` play when dependencies change?

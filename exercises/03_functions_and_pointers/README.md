@@ -27,8 +27,9 @@ gofmt -l exercises/03_functions_and_pointers
 
 ## 📝 Notes
 
-- A variadic parameter (`...int`) is a slice inside the function body; an
-  empty call still gives a non-nil, zero-length slice.
+- A variadic parameter (`...int`) is a slice inside the function body; a call
+  with no arguments gives a nil slice with length zero, which is safe to range
+  over.
 - Each call to a closure-returning function creates independent state; two
   counters must not share the same counter.
 - A pointer receiver lets a function mutate the caller's variable; a plain

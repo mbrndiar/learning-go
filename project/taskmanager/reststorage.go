@@ -38,7 +38,7 @@ func (s *RESTStorage) List(ctx context.Context) ([]Task, error) {
 }
 
 // Get returns a single remote task by identifier.
-func (s *RESTStorage) Get(ctx context.Context, id int) (Task, error) {
+func (s *RESTStorage) Get(ctx context.Context, id int64) (Task, error) {
 	task, err := s.client.Get(ctx, id)
 	if err != nil {
 		return Task{}, translateClientError(err)
@@ -56,7 +56,7 @@ func (s *RESTStorage) Add(ctx context.Context, title string) (Task, error) {
 }
 
 // Complete marks a remote task as done.
-func (s *RESTStorage) Complete(ctx context.Context, id int) (Task, error) {
+func (s *RESTStorage) Complete(ctx context.Context, id int64) (Task, error) {
 	task, err := s.client.Complete(ctx, id)
 	if err != nil {
 		return Task{}, translateClientError(err)
@@ -65,7 +65,7 @@ func (s *RESTStorage) Complete(ctx context.Context, id int) (Task, error) {
 }
 
 // Remove deletes a remote task.
-func (s *RESTStorage) Remove(ctx context.Context, id int) error {
+func (s *RESTStorage) Remove(ctx context.Context, id int64) error {
 	if err := s.client.Remove(ctx, id); err != nil {
 		return translateClientError(err)
 	}

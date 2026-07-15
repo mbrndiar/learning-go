@@ -5,6 +5,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -40,14 +41,17 @@ type errorResponse struct {
 // sign the client is out of sync with the API), and trailing data after
 // the JSON value (a sign of a malformed or concatenated body).
 func decodeStrict(body []byte, dst any) error {
-	decoder := json.NewDecoder(strings.NewReader(string(body)))
+	decoder := json.NewDecoder(bytes.NewReader(body))
 	decoder.DisallowUnknownFields()
 
 	if err := decoder.Decode(dst); err != nil {
 		return fmt.Errorf("decode json: %w", err)
 	}
-	if decoder.More() {
-		return errors.New("decode json: unexpected trailing data")
+	if err := decoder.Decode(&struct{}{}); !errors.Is(err, io.EOF) {
+		if err == nil {
+			return errors.New("decode json: unexpected trailing data")
+		}
+		return fmt.Errorf("decode json: unexpected trailing data: %w", err)
 	}
 	return nil
 }

@@ -10,7 +10,7 @@ import (
 // assert that Manager validates before delegating.
 type stubStorage struct {
 	addCalls     int
-	lastGetID    int
+	lastGetID    int64
 	returnErr    error
 	returnedTask Task
 }
@@ -19,7 +19,7 @@ func (s *stubStorage) List(context.Context) ([]Task, error) {
 	return nil, s.returnErr
 }
 
-func (s *stubStorage) Get(_ context.Context, id int) (Task, error) {
+func (s *stubStorage) Get(_ context.Context, id int64) (Task, error) {
 	s.lastGetID = id
 	return s.returnedTask, s.returnErr
 }
@@ -32,12 +32,12 @@ func (s *stubStorage) Add(_ context.Context, title string) (Task, error) {
 	return Task{ID: 1, Title: title}, nil
 }
 
-func (s *stubStorage) Complete(_ context.Context, id int) (Task, error) {
+func (s *stubStorage) Complete(_ context.Context, id int64) (Task, error) {
 	s.lastGetID = id
 	return s.returnedTask, s.returnErr
 }
 
-func (s *stubStorage) Remove(_ context.Context, id int) error {
+func (s *stubStorage) Remove(_ context.Context, id int64) error {
 	s.lastGetID = id
 	return s.returnErr
 }

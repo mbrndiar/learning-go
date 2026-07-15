@@ -69,6 +69,9 @@ func main() {
 	// A type switch inspects the dynamic type stored in an interface
 	// value. "value := x.(type)" is special syntax only valid inside a
 	// switch; each case gives "value" the corresponding concrete type.
+	// This example previews `any` (interfaces, module 5) and an anonymous
+	// function (module 3). For now, focus on how the switch chooses a case
+	// from the value's runtime type.
 	describe := func(value any) string {
 		switch v := value.(type) {
 		case int:

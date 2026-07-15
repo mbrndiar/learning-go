@@ -32,7 +32,7 @@ func (m *Manager) List(ctx context.Context) ([]Task, error) {
 }
 
 // Get returns a single task by identifier.
-func (m *Manager) Get(ctx context.Context, id int) (Task, error) {
+func (m *Manager) Get(ctx context.Context, id int64) (Task, error) {
 	if id <= 0 {
 		return Task{}, fmt.Errorf("%w: got %d", ErrInvalidID, id)
 	}
@@ -57,7 +57,7 @@ func (m *Manager) Add(ctx context.Context, title string) (Task, error) {
 }
 
 // Complete marks a task as done.
-func (m *Manager) Complete(ctx context.Context, id int) (Task, error) {
+func (m *Manager) Complete(ctx context.Context, id int64) (Task, error) {
 	if id <= 0 {
 		return Task{}, fmt.Errorf("%w: got %d", ErrInvalidID, id)
 	}
@@ -69,7 +69,7 @@ func (m *Manager) Complete(ctx context.Context, id int) (Task, error) {
 }
 
 // Remove deletes a task.
-func (m *Manager) Remove(ctx context.Context, id int) error {
+func (m *Manager) Remove(ctx context.Context, id int64) error {
 	if id <= 0 {
 		return fmt.Errorf("%w: got %d", ErrInvalidID, id)
 	}

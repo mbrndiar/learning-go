@@ -3,8 +3,9 @@
 package solution
 
 import (
+	"cmp"
 	"errors"
-	"sort"
+	"slices"
 	"strings"
 )
 
@@ -65,8 +66,8 @@ func MergeCounts(a, b map[string]int) map[string]int {
 func SortDescending(nums []int) []int {
 	result := make([]int, len(nums))
 	copy(result, nums)
-	sort.Slice(result, func(i, j int) bool {
-		return result[i] > result[j]
+	slices.SortFunc(result, func(a, b int) int {
+		return cmp.Compare(b, a)
 	})
 	return result
 }

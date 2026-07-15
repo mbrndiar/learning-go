@@ -10,8 +10,8 @@ yours to implement.
 
 ## 🧩 Tasks
 
-1. `Task.Validate` — a trimmed, non-empty `Title` of at most 200 characters,
-   and, if `DueDate` is set, it must not be before the `now` passed in.
+1. `Task.Validate` — a trimmed, non-empty `Title` of at most 200 Unicode code
+   points, and, if `DueDate` is set, it must not be before the `now` passed in.
 2. `SQLTaskStore.Create` / `.Get` / `.List` — the `database/sql` boundary:
    `ExecContext`/`QueryRowContext`/`QueryContext` against the fake driver,
    translating `sql.ErrNoRows` into `ErrNotFound`, and converting the

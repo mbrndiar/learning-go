@@ -7,9 +7,10 @@ import (
 	"errors"
 	"strings"
 	"time"
+	"unicode/utf8"
 )
 
-// maxTitleLen is the longest a Task's Title may be.
+// maxTitleLen is the longest a Task's Title may be in Unicode code points.
 const maxTitleLen = 200
 
 // ErrNotFound is returned by TaskStore implementations when a requested task
@@ -32,8 +33,8 @@ func (t Task) Validate(now time.Time) error {
 	if title == "" {
 		return errors.New("title must not be empty")
 	}
-	if len(title) > maxTitleLen {
-		return errors.New("title must be at most 200 characters")
+	if utf8.RuneCountInString(title) > maxTitleLen {
+		return errors.New("title must be at most 200 Unicode code points")
 	}
 	if t.DueDate != nil && t.DueDate.Before(now) {
 		return errors.New("due date must not be in the past")

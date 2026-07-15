@@ -6,10 +6,11 @@ import (
 	"testing"
 )
 
-// storageContract exercises the behavior every Storage implementation must
+// runStorageContract exercises the behavior every Storage implementation must
 // provide. It is applied to FileStorage and RESTStorage so both backends are
 // held to the same guarantees, including monotonic identifiers and uniform
-// not-found errors.
+// not-found errors. Adding a backend means running this same suite against a
+// new factory, preventing implementations from silently drifting apart.
 func runStorageContract(t *testing.T, factory func(t *testing.T) Storage) {
 	t.Helper()
 

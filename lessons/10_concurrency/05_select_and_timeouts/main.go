@@ -39,8 +39,9 @@ var ErrTimeout = errors.New("timed out waiting for value")
 
 // awaitWithTimeout waits for a value on ch but gives up after timeout,
 // returning ErrTimeout instead of blocking forever. This is the classic
-// select-based timeout pattern; lesson 09 shows the equivalent, and
-// generally preferred, context.WithTimeout approach.
+// select-based timeout pattern; lesson 09 (context cancellation) in this
+// module shows the equivalent, and generally preferred,
+// context.WithTimeout approach.
 func awaitWithTimeout(ch <-chan int, timeout time.Duration) (int, error) {
 	timer := time.NewTimer(timeout)
 	defer timer.Stop() // release the timer's resources promptly

@@ -5,6 +5,8 @@ package main
 
 import "fmt"
 
+// Structs are introduced in module 5. Here task is only a compact way to keep
+// a name and completion flag together while demonstrating range semantics.
 type task struct {
 	name string
 	done bool

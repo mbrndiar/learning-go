@@ -45,9 +45,11 @@ Every HTTP handler has a **request/response boundary**: bytes coming in
 must be decoded and validated before you trust them, and values going out
 must be encoded consistently. `json.Decoder.DisallowUnknownFields` rejects
 a body containing a field your server does not know about — usually a sign
-the client is out of date — and checking `decoder.More()` catches trailing
-data after the JSON value. Set headers (like `Content-Type`) and the status
-code with `WriteHeader` *before* writing any response body; net/http
+the client is out of date. To reject trailing data, attempt a second decode
+and require `io.EOF`; `Decoder.More` is for elements inside the current array
+or object, not for validating a top-level request body. Set headers (like
+`Content-Type`) and the status code with `WriteHeader` *before* writing any
+response body; net/http
 ignores header changes made afterward. A small, consistent error envelope
 (for example `{"error": "..."}`) lets every client parse failures the same
 way it parses success responses.
@@ -86,7 +88,9 @@ interface with a real `*sql.DB` and a pinned pure-Go SQLite driver.
 (`db.ExecContext(ctx, "UPDATE accounts SET balance = ? WHERE name = ?", amount, name)`)
 instead of concatenating them into the query string. The driver sends
 parameters as data, never as part of the SQL text, which is what prevents
-SQL injection. A **transaction**, started with `db.BeginTx` and ended with
+SQL injection for values. Placeholders cannot substitute table names, column
+names, or SQL keywords; choose those from a fixed allowlist instead of user
+input. A **transaction**, started with `db.BeginTx` and ended with
 either `tx.Commit()` or `tx.Rollback()`, groups several statements into one
 all-or-nothing unit: if any step fails, rolling back guarantees none of the
 steps took effect, which matters whenever two or more writes must succeed

@@ -114,5 +114,5 @@ go build ./lessons/04_collections/...
 
 Previous:
 [Module 3 — Functions and Pointers](../03_functions_and_pointers/README.md).
-Next: Module 5 — Structs, Methods and Interfaces (outside this module's
-scope).
+Next:
+[Module 5 — Structs, Methods and Interfaces](../05_structs_methods_interfaces/README.md).

@@ -37,7 +37,7 @@ func BenchmarkFibIterative(b *testing.B) {
 	}
 }
 
-// BenchmarkFibIterative_N30 shows a table of input sizes using sub-benchmarks,
+// BenchmarkFibIterativeSizes shows a table of input sizes using sub-benchmarks,
 // mirroring how subtests work for regular tests.
 func BenchmarkFibIterativeSizes(b *testing.B) {
 	for _, n := range []int{10, 20, 30, 40} {

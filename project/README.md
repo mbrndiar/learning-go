@@ -32,5 +32,7 @@ go run ./project/taskapi/cmd/task-api
 go run ./project/taskclient/cmd/task-client add "Remote task"
 ```
 
-Each project directory contains its own architecture, usage, testing, and
-extension documentation.
+Each project directory contains its own architecture, usage, and testing
+documentation. The staged extension list in
+[`taskmanager/README.md`](taskmanager/README.md) deliberately spans all three
+packages so changes stay connected end to end.

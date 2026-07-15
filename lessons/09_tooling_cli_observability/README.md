@@ -99,7 +99,7 @@ Neither ships with the `go` binary; both are official or widely trusted
 tools you install separately with `go install`:
 
 ```bash
-go install honnef.co/go/tools/cmd/staticcheck@latest
+go install honnef.co/go/tools/cmd/staticcheck@v0.7.0
 staticcheck ./...
 ```
 
@@ -108,7 +108,7 @@ staticcheck ./...
 usage, and more.
 
 ```bash
-go install golang.org/x/vuln/cmd/govulncheck@latest
+go install golang.org/x/vuln/cmd/govulncheck@v1.6.0
 govulncheck ./...
 ```
 
@@ -117,9 +117,40 @@ functions you actually call) against the Go vulnerability database, and
 reports only vulnerabilities reachable from your code. Run it after
 `go mod tidy` whenever you add or update a dependency.
 
-Both tools require installing a separate binary and network access to
-fetch it, so this module documents the commands rather than running them
-automatically - the lessons themselves only exercise the standard library.
+Both tools require installing a separate binary and network access to fetch
+it. The versions above match CI so local and automated results stay
+reproducible; update pins deliberately after reviewing release notes.
+
+### A real local-to-CI workflow
+
+The course workflow in [`.github/workflows/course.yml`](../../.github/workflows/course.yml)
+runs on Go 1.25 and 1.26. A practical local sequence is:
+
+```bash
+go mod download
+go mod tidy
+git diff --exit-code -- go.mod go.sum
+go fmt ./...
+go vet ./...
+go test ./lessons/...
+go list ./exercises/... | grep -v '/solution$' | xargs go test -run '^$'
+go list ./exercises/... | grep '/solution$' | xargs go test
+go test ./project/...
+go test -race ./project/... ./lessons/10_concurrency/... ./lessons/11_application_integration/... \
+  ./exercises/10_concurrency/solution ./exercises/11_application_integration/solution
+go test -coverprofile=coverage.out ./project/taskmanager ./project/taskapi ./project/taskclient
+bash scripts/check-coverage.sh coverage.out 85
+{ go list ./lessons/...; go list ./exercises/... | grep '/solution$'; go list ./project/...; go list ./tools/...; } |
+  xargs staticcheck
+govulncheck ./...
+go run ./tools/checklinks
+```
+
+Starter exercises intentionally fail their behavior tests until completed, so
+CI compiles them with `go test -run '^$'` and runs the separate `solution`
+packages. The workflow also runs a short fuzz smoke test. GitHub Actions uses
+the official [`actions/checkout`](https://github.com/actions/checkout) and
+[`actions/setup-go`](https://github.com/actions/setup-go) actions.
 
 ### CLI design with `flag` (`01_cli_flags`)
 
@@ -170,6 +201,10 @@ that actually happen during that run, so a race-detector-clean run does not
 prove a program is race-free; it proves that run did not trigger one.
 `-race` roughly doubles memory use and slows execution significantly, so it
 is normally used in CI and local testing, not in production binaries.
+
+This example intentionally previews goroutines, `sync.WaitGroup`, and
+`sync.Mutex`; module 10 teaches those mechanisms in order. Here, treat them as
+the setup needed to compare a racy execution with a synchronized one.
 
 ### Profiling and debugging orientation (`04_pprof_delve`)
 

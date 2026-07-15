@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-// maxTitleLen is the longest a Task's Title may be.
+// maxTitleLen is the longest a Task's Title may be in Unicode code points.
 const maxTitleLen = 200
 
 // ErrNotFound is returned by TaskStore implementations when a requested task
@@ -29,8 +29,8 @@ type Task struct {
 // Validate reports whether t is acceptable input, given the current time
 // now (passed explicitly rather than read from time.Now() so validation
 // stays deterministic and testable). Title must be non-empty after trimming
-// whitespace and at most maxTitleLen characters; DueDate, if set, must not
-// be before now.
+// whitespace and at most maxTitleLen Unicode code points; DueDate, if set,
+// must not be before now.
 //
 // TODO(task 1): implement Validate.
 func (t Task) Validate(now time.Time) error {

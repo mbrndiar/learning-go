@@ -34,7 +34,9 @@ type API struct {
 	maxBodyBytes int64
 }
 
-// APIOption configures an API during construction.
+// APIOption configures an API during construction. This functional-options
+// pattern keeps NewAPI's required arguments small while allowing independent
+// optional settings without a long positional parameter list.
 type APIOption func(*API)
 
 // WithLogger sets the structured logger used for server-side error logging.
@@ -85,6 +87,8 @@ type errorResponse struct {
 // returned handler is safe for concurrent use.
 func (a *API) Handler() http.Handler {
 	mux := http.NewServeMux()
+	// Go 1.22+ patterns combine the method and path and expose {id} through
+	// Request.PathValue; lesson 11 introduces this routing model.
 	mux.HandleFunc("GET /tasks", a.handleList)
 	mux.HandleFunc("POST /tasks", a.handleAdd)
 	mux.HandleFunc("GET /tasks/{id}", a.handleGet)
