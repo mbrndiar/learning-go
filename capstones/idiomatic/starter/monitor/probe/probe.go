@@ -4,31 +4,41 @@ package probe
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/mbrndiar/learning-go/capstones/idiomatic/starter/monitor/domain"
 )
 
 const placeholderMessage = "TODO: implement HTTP probing"
 
-// Prober performs one observation of a target.
 type Prober interface {
 	Probe(context.Context, domain.Target) domain.Observation
 }
 
-// HTTPProber will implement the standard-library HTTP probe.
-type HTTPProber struct{}
+type Clock interface {
+	Now() time.Time
+	Since(time.Time) time.Duration
+}
 
-// NewHTTPProber constructs the HTTP prober boundary.
-func NewHTTPProber(_ *http.Client) *HTTPProber {
+type HTTPProber struct {
+	placeholder struct{}
+}
+
+func NewHTTPProber(client *http.Client) *HTTPProber {
+	return NewHTTPProberWithClock(client, nil)
+}
+
+func NewHTTPProberWithClock(client *http.Client, clock Clock) *HTTPProber {
 	return &HTTPProber{}
 }
 
-// Probe returns an explicit non-observation until probing is implemented.
-func (*HTTPProber) Probe(_ context.Context, target domain.Target) domain.Observation {
+func ClassifyStatus(status, minimum, maximum int) (domain.Status, string) {
+	return domain.StatusUnknown, placeholderMessage
+}
+
+func (prober *HTTPProber) Probe(ctx context.Context, target domain.Target) (observation domain.Observation) {
 	return domain.Observation{
-		Target:         target.Name,
-		Status:         domain.StatusUnknown,
-		PreviousStatus: domain.StatusUnknown,
-		Message:        placeholderMessage,
+		Target: target.Name, Status: domain.StatusUnknown, PreviousStatus: domain.StatusUnknown,
+		Message: placeholderMessage,
 	}
 }

@@ -3,37 +3,93 @@ package scheduler
 
 import (
 	"context"
+	"errors"
+	"time"
 
 	"github.com/mbrndiar/learning-go/capstones/idiomatic/starter/monitor/domain"
 	"github.com/mbrndiar/learning-go/capstones/idiomatic/starter/monitor/history"
 	"github.com/mbrndiar/learning-go/capstones/idiomatic/starter/monitor/probe"
 )
 
-// Trigger supplies deterministic cycle notifications.
+var (
+	// ErrAlreadyStarted identifies a second Start call.
+	ErrAlreadyStarted = errors.New("scheduler already started")
+	// ErrNotStarted identifies Wait before Start.
+	ErrNotStarted = errors.New("scheduler not started")
+	// ErrInvalidScheduler identifies invalid scheduler dependencies.
+	ErrInvalidScheduler = errors.New("invalid scheduler")
+)
+
 type Trigger interface {
 	Wait(context.Context) error
 }
 
-// Scheduler owns future probe-cycle goroutines.
-type Scheduler struct{}
+type TargetSelector interface {
+	Select([]domain.Target) []domain.Target
+}
 
-// New constructs the scheduler boundary.
+type WallClock interface {
+	Now() time.Time
+}
+
+type ManualTrigger struct {
+	placeholder struct{}
+}
+
+func NewManualTrigger() *ManualTrigger {
+	return &ManualTrigger{}
+}
+
+func (trigger *ManualTrigger) Fire(ctx context.Context) error {
+	return domain.ErrNotImplemented
+}
+
+func (trigger *ManualTrigger) Wait(ctx context.Context) error {
+	return domain.ErrNotImplemented
+}
+
+type IntervalTrigger struct {
+	placeholder struct{}
+}
+
+func NewIntervalTrigger() *IntervalTrigger {
+	return &IntervalTrigger{}
+}
+
+func NewIntervalTriggerWithClock(clock WallClock) *IntervalTrigger {
+	return &IntervalTrigger{}
+}
+
+func (trigger *IntervalTrigger) Wait(ctx context.Context) error {
+	return domain.ErrNotImplemented
+}
+
+func (trigger *IntervalTrigger) Select(targets []domain.Target) []domain.Target {
+	return nil
+}
+
+type Scheduler struct {
+	placeholder struct{}
+}
+
 func New(
-	_ probe.Prober,
-	_ history.Store,
-	_ []domain.Target,
-	_ int,
-	_ Trigger,
+	prober probe.Prober,
+	store history.Store,
+	targets []domain.Target,
+	maxConcurrency int,
+	trigger Trigger,
 ) *Scheduler {
 	return &Scheduler{}
 }
 
-// Start is intentionally incomplete and starts no goroutines.
-func (*Scheduler) Start(context.Context) error {
+func (scheduler *Scheduler) Start(ctx context.Context) error {
 	return domain.ErrNotImplemented
 }
 
-// Wait is intentionally incomplete and has no goroutines to join.
-func (*Scheduler) Wait() error {
+func (scheduler *Scheduler) Wait() error {
 	return domain.ErrNotImplemented
+}
+
+func (scheduler *Scheduler) RunCycle(ctx context.Context) ([]domain.Observation, error) {
+	return nil, domain.ErrNotImplemented
 }

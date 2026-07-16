@@ -8,10 +8,10 @@ This course has two independent capstones:
   monitor around interfaces, goroutines, contexts, and `net/http`.
 
 Both capstones use matching `starter/` and `solution/` trees. Their exported
-boundaries intentionally match so shared contract helpers and later milestone
-tests can target either implementation without changing imports or test logic.
-At this harness stage both trees compile but deliberately report
-`not implemented`; no key/value or monitoring behavior has been added yet.
+boundaries intentionally match so shared contract helpers and milestone tests
+can target either implementation without changing behavior. The idiomatic
+monitor solution is complete; its starter remains an explicit guided TODO. The
+comparative capstone remains at its initial harness stage.
 
 ## Targeted workflow
 

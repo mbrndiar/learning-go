@@ -1,0 +1,14 @@
+{
+  "schema_version": 2,
+  "max_concurrency": 1,
+  "history_limit": 1,
+  "targets": [{
+    "name": "catalog",
+    "url": "http://127.0.0.1:9001/health",
+    "interval_ms": 100,
+    "timeout_ms": 100,
+    "expected_status_min": 200,
+    "expected_status_max": 399,
+    "max_body_bytes": 0
+  }]
+}

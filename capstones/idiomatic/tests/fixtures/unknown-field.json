@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "max_concurrency": 1,
+  "history_limit": 1,
+  "unknown": true,
+  "targets": []
+}

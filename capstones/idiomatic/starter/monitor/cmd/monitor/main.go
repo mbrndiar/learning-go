@@ -4,10 +4,14 @@ package main
 import (
 	"context"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/mbrndiar/learning-go/capstones/idiomatic/starter/monitor/cli"
 )
 
 func main() {
-	os.Exit(cli.Run(context.Background(), os.Args[1:], os.Stdout, os.Stderr))
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	os.Exit(cli.Run(ctx, os.Args[1:], os.Stdout, os.Stderr))
 }

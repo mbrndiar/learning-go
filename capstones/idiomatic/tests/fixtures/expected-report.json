@@ -1,0 +1,16 @@
+{
+  "checked_at": "2026-07-16T08:00:00.000Z",
+  "summary": {"healthy": 1, "degraded": 0, "unhealthy": 0},
+  "results": [{
+    "sequence": 1,
+    "target": "catalog",
+    "checked_at": "2026-07-16T08:00:00.000Z",
+    "duration_ms": 12,
+    "status": "healthy",
+    "previous_status": "unknown",
+    "transition": true,
+    "http_status": 204,
+    "error_code": null,
+    "message": "status 204 was within 200..399"
+  }]
+}

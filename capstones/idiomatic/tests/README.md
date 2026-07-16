@@ -1,9 +1,23 @@
 # Idiomatic test architecture
 
-`contract/` contains implementation-neutral helpers. Thin tests in each
-`starter/monitor` and `solution/monitor` root adapt their local packages to
-those helpers.
+`contract/` contains the initial implementation-neutral harness. The milestone
+packages contain focused shared assertions used by thin solution package tests:
 
-Add deterministic fixtures under `fixtures/` and progressive shared contracts
-under `m1/` through `m5/`. Tests should accept factories or small interfaces so
-the same assertions can run against either implementation tree.
+- `m1`: strict domain validation, sentinels, transitions, and bounded history;
+- `m2`: deterministic HTTP classification and response ownership;
+- `m3`: bounded scheduler concurrency, cancellation, triggers, and joins;
+- `m4`: handler routing, ordering, limits, errors, and stopping state;
+- `m5`: CLI/process integration and JSON error envelopes.
+
+`fixtures/` provides valid/invalid JSON documents, expected report/API JSON,
+and a race-safe scripted loopback handler. Tests use `httptest`, temporary
+directories, injected clocks, channels, and contexts; they require no public
+network access.
+
+Run one milestone package or the complete solution:
+
+```bash
+go test ./capstones/idiomatic/tests/m1/...
+go test ./capstones/idiomatic/solution/monitor/... \
+  ./capstones/idiomatic/tests/...
+```

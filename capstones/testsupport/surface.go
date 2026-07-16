@@ -4,11 +4,13 @@ package testsupport
 import (
 	"fmt"
 	"go/ast"
+	"go/build"
 	"go/doc"
 	"go/format"
 	"go/parser"
 	"go/token"
 	"io/fs"
+	"os"
 	"path/filepath"
 	"reflect"
 	"sort"
@@ -65,11 +67,28 @@ func exportedSurface(root string) (map[string][]string, error) {
 
 func packageSurface(directory string) ([]string, error) {
 	fileset := token.NewFileSet()
-	packages, err := parser.ParseDir(fileset, directory, func(info fs.FileInfo) bool {
-		return !strings.HasSuffix(info.Name(), "_test.go")
-	}, parser.ParseComments)
+	entries, err := os.ReadDir(directory)
 	if err != nil {
 		return nil, err
+	}
+	packages := make(map[string][]*ast.File)
+	for _, entry := range entries {
+		name := entry.Name()
+		if entry.IsDir() || filepath.Ext(name) != ".go" || strings.HasSuffix(name, "_test.go") {
+			continue
+		}
+		matches, err := build.Default.MatchFile(directory, name)
+		if err != nil {
+			return nil, err
+		}
+		if !matches {
+			continue
+		}
+		file, err := parser.ParseFile(fileset, filepath.Join(directory, name), nil, parser.ParseComments)
+		if err != nil {
+			return nil, err
+		}
+		packages[file.Name.Name] = append(packages[file.Name.Name], file)
 	}
 	if len(packages) != 1 {
 		return nil, fmt.Errorf("%s contains %d packages, want 1", directory, len(packages))
@@ -77,9 +96,12 @@ func packageSurface(directory string) ([]string, error) {
 
 	var declarations []string
 	for _, parsed := range packages {
-		documented := doc.New(parsed, "", 0)
+		documented, err := doc.NewFromFiles(fileset, parsed, "")
+		if err != nil {
+			return nil, err
+		}
 		for _, value := range documented.Consts {
-			declarations = append(declarations, renderNode(fileset, value.Decl))
+			declarations = append(declarations, normalizeDeclaration(renderNode(fileset, value.Decl)))
 		}
 		for _, value := range documented.Vars {
 			declarations = append(declarations, renderNode(fileset, value.Decl))
@@ -113,4 +135,11 @@ func renderNode(fileset *token.FileSet, node ast.Node) string {
 		return fmt.Sprintf("<format error: %v>", err)
 	}
 	return output.String()
+}
+
+func normalizeDeclaration(declaration string) string {
+	if strings.HasPrefix(declaration, "const Implemented = ") {
+		return "const Implemented"
+	}
+	return declaration
 }
