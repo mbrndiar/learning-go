@@ -75,8 +75,8 @@ The course now provides two staged capstones under
   goroutines, and `net/http`.
 
 Both have matching starter/solution package boundaries and reusable contract
-test support. The idiomatic monitor includes a complete reference solution and
-guided five-milestone starter; unfinished starter behavior remains explicit.
+test support. Each includes a complete reference solution and guided
+five-milestone starter; unfinished starter behavior remains explicit.
 
 The connected [Task projects](project/README.md) remain available as completed
 integration examples:

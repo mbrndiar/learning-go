@@ -30,6 +30,6 @@ func NewSQLiteOpener() *SQLiteOpener {
 }
 
 // Open is intentionally incomplete in the harness.
-func (*SQLiteOpener) Open(context.Context, string) (Store, error) {
+func (*SQLiteOpener) Open(ctx context.Context, path string) (Store, error) {
 	return nil, domain.ErrNotImplemented
 }

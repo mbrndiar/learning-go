@@ -8,7 +8,7 @@ import (
 )
 
 // Run is the stable process boundary used by the thin command.
-func Run(_ context.Context, _ []string, stdout io.Writer, _ io.Writer) int {
+func Run(ctx context.Context, args []string, stdout io.Writer, _ io.Writer) int {
 	writePlaceholder(stdout)
 	return 1
 }

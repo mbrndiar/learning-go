@@ -9,9 +9,8 @@ This course has two independent capstones:
 
 Both capstones use matching `starter/` and `solution/` trees. Their exported
 boundaries intentionally match so shared contract helpers and milestone tests
-can target either implementation without changing behavior. The idiomatic
-monitor solution is complete; its starter remains an explicit guided TODO. The
-comparative capstone remains at its initial harness stage.
+can target either implementation without changing behavior. Both solutions are
+complete; both starters remain explicit guided TODOs.
 
 ## Targeted workflow
 
@@ -23,7 +22,7 @@ go test -run '^$' \
   ./capstones/idiomatic/starter/...
 ```
 
-Run the harness smoke tests for both targets:
+Run the starter harnesses, both complete solutions, and the API boundary check:
 
 ```bash
 go test \

@@ -30,6 +30,8 @@ go.work.sum
 # Capstone runtime data
 project/taskmanager/tasks.json
 project/taskapi/tasks.db
+capstones/comparative/.conformance/
+capstones/comparative/.coverage/
 
 # Editor/IDE
 # .idea/

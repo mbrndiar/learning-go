@@ -79,17 +79,27 @@ func (e *Error) Unwrap() error {
 	return e.Cause
 }
 
+// ExitCode returns the normative process exit code for the error.
+func (e *Error) ExitCode() int {
+	return 1
+}
+
 // ParseKey validates and returns a shared-contract key.
-func ParseKey(string) (string, error) {
+func ParseKey(value string) (string, error) {
 	return "", ErrNotImplemented
 }
 
 // ParseExpectation parses a set or delete expectation.
-func ParseExpectation(string, bool) (Expectation, error) {
+func ParseExpectation(value string, allowAbsent bool) (Expectation, error) {
 	return Expectation{}, ErrNotImplemented
 }
 
 // ParseValue parses and normalizes one restricted JSON value.
-func ParseValue(json.RawMessage) (Value, error) {
+func ParseValue(input json.RawMessage) (Value, error) {
+	return nil, ErrNotImplemented
+}
+
+// ParseStoredValue parses a value already persisted in normalized form.
+func ParseStoredValue(input string) (Value, error) {
 	return nil, ErrNotImplemented
 }

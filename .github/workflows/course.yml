@@ -95,8 +95,19 @@ jobs:
         run: |
           go test -race ./project/...
           go test -race \
+            ./capstones/comparative/tests/... \
             ./capstones/idiomatic/solution/monitor/... \
             ./capstones/idiomatic/tests/...
+          race_directory=capstones/comparative/.conformance/race
+          trap 'rm -rf "$race_directory"' EXIT
+          mkdir -p "$race_directory"
+          go build -race \
+            -o "$race_directory/kvstore" \
+            ./capstones/comparative/solution/kvstore/cmd/kvstore
+          COMPARATIVE_KV_PROGRAM="$PWD/$race_directory/kvstore" \
+            go test -race -count=2 ./capstones/comparative/solution/kvstore
+          rm -rf "$race_directory"
+          trap - EXIT
           go test -race ./lessons/10_concurrency/...
           go test -race ./lessons/11_application_integration/...
           go test -race ./exercises/10_concurrency/solution
@@ -113,6 +124,29 @@ jobs:
           go test -coverprofile=idiomatic-coverage.out \
             ./capstones/idiomatic/solution/monitor/...
           bash scripts/check-coverage.sh idiomatic-coverage.out 85
+          comparative_coverage=capstones/comparative/.coverage
+          trap 'rm -rf "$comparative_coverage"' EXIT
+          mkdir -p \
+            "$comparative_coverage/bin" \
+            "$comparative_coverage/data"
+          go build -cover \
+            -coverpkg=./capstones/comparative/solution/... \
+            -o "$comparative_coverage/bin/kvstore" \
+            ./capstones/comparative/solution/kvstore/cmd/kvstore
+          COMPARATIVE_KV_PROGRAM="$PWD/$comparative_coverage/bin/kvstore" \
+          GOCOVERDIR="$PWD/$comparative_coverage/data" \
+            go test ./capstones/comparative/solution/kvstore
+          coverage_inputs=$(
+            find "$comparative_coverage/data" \
+              -mindepth 1 -maxdepth 1 -type d -printf '%p,' |
+              sed 's/,$//'
+          )
+          go tool covdata textfmt \
+            -i="$coverage_inputs" \
+            -o=comparative-coverage.out
+          bash scripts/check-coverage.sh comparative-coverage.out 75
+          rm -rf "$comparative_coverage"
+          trap - EXIT
 
       - name: Run fuzz smoke test
         if: matrix.go-version == '1.26.x'
