@@ -130,14 +130,24 @@ func assertTitleRules(t *testing.T, harness TaskHarness) {
 		message string
 	}{
 		{name: "trim", input: " \u2003 Learn REST \u00a0", want: "Learn REST"},
+		{name: "trim surrounding tab", input: "\tLearn REST\t", want: "Learn REST"},
+		{name: "trim surrounding carriage return", input: "\rLearn REST\r", want: "Learn REST"},
+		{name: "trim surrounding line feed", input: "\nLearn REST\n", want: "Learn REST"},
+		{name: "trim surrounding line separator", input: "\u2028Learn REST\u2028", want: "Learn REST"},
+		{name: "trim surrounding paragraph separator", input: "\u2029Learn REST\u2029", want: "Learn REST"},
 		{name: "unicode", input: "Καλημέρα 世界 🚀", want: "Καλημέρα 世界 🚀"},
 		{name: "maximum ASCII", input: maxASCII, want: maxASCII},
 		{name: "maximum Unicode", input: maxUnicode, want: maxUnicode},
 		{name: "empty", input: " \u2003 ", message: "title must contain between 1 and 120 characters"},
 		{name: "too long", input: maxUnicode + "界", message: "title must contain between 1 and 120 characters"},
 		{name: "line feed", input: "one\ntwo", message: "title must occupy one physical line"},
-		{name: "trailing line feed", input: "one\n", message: "title must occupy one physical line"},
 		{name: "carriage return", input: "one\rtwo", message: "title must occupy one physical line"},
+		{name: "vertical tab line break", input: "one\vtwo", message: "title must occupy one physical line"},
+		{name: "form feed line break", input: "one\ftwo", message: "title must occupy one physical line"},
+		{name: "file separator line break", input: "one\u001ctwo", message: "title must occupy one physical line"},
+		{name: "group separator line break", input: "one\u001dtwo", message: "title must occupy one physical line"},
+		{name: "record separator line break", input: "one\u001etwo", message: "title must occupy one physical line"},
+		{name: "next line break", input: "one\u0085two", message: "title must occupy one physical line"},
 		{name: "line separator", input: "one\u2028two", message: "title must occupy one physical line"},
 		{name: "paragraph separator", input: "one\u2029two", message: "title must occupy one physical line"},
 		{name: "tab", input: "one\ttwo", message: "title must not contain control characters"},
@@ -173,7 +183,7 @@ func assertValidationRules(t *testing.T, harness TaskHarness) {
 	t.Helper()
 	for _, id := range []int64{-1, 0} {
 		t.Run(fmt.Sprintf("id/%d", id), func(t *testing.T) {
-			assertValidation(t, harness, harness.ValidateID(id), "id", "id must be a positive integer")
+			assertValidation(t, harness, harness.ValidateID(id), "id", "task ID must be a positive integer")
 		})
 	}
 	if err := harness.ValidateID(1); err != nil {
@@ -182,7 +192,7 @@ func assertValidationRules(t *testing.T, harness TaskHarness) {
 
 	t.Run("both update fields absent", func(t *testing.T) {
 		_, err := harness.NormalizeUpdate(UpdateInput{})
-		assertValidation(t, harness, err, "body", "update must include title or completed")
+		assertValidation(t, harness, err, "update", "update must include title or completed")
 	})
 
 	t.Run("update normalization and false", func(t *testing.T) {
@@ -216,7 +226,7 @@ func assertValidationRules(t *testing.T, harness TaskHarness) {
 		if err := harness.ValidateTask(Task{ID: 1, Title: "valid"}); err != nil {
 			t.Fatalf("ValidateTask(valid) error = %v", err)
 		}
-		assertValidation(t, harness, harness.ValidateTask(Task{ID: 0, Title: "valid"}), "id", "id must be a positive integer")
+		assertValidation(t, harness, harness.ValidateTask(Task{ID: 0, Title: "valid"}), "id", "task ID must be a positive integer")
 		if err := harness.ValidateTask(Task{ID: 1, Title: " padded "}); err == nil {
 			t.Fatal("ValidateTask() accepted an untrimmed title")
 		}

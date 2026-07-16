@@ -213,21 +213,21 @@ func (s *Service) Delete(ctx context.Context, id int64) error {
 
 // NormalizeTitle trims and validates a title.
 func NormalizeTitle(title string) (string, error) {
+	title = strings.TrimSpace(title)
 	if !utf8.ValidString(title) {
 		return "", validationError("title", "title must contain valid UTF-8")
 	}
+	count := utf8.RuneCountInString(title)
+	if count < 1 || count > MaxTitleLength {
+		return "", validationError("title", "title must contain between 1 and 120 characters")
+	}
 	for _, r := range title {
-		if r == '\n' || r == '\r' || unicode.Is(unicode.Zl, r) || unicode.Is(unicode.Zp, r) {
+		if isPhysicalLineBreak(r) {
 			return "", validationError("title", "title must occupy one physical line")
 		}
 		if unicode.IsControl(r) {
 			return "", validationError("title", "title must not contain control characters")
 		}
-	}
-	title = strings.TrimSpace(title)
-	count := utf8.RuneCountInString(title)
-	if count < 1 || count > MaxTitleLength {
-		return "", validationError("title", "title must contain between 1 and 120 characters")
 	}
 	return title, nil
 }
@@ -247,7 +247,7 @@ func ValidateTitle(title string) error {
 // ValidateID requires a positive task ID.
 func ValidateID(id int64) error {
 	if id <= 0 {
-		return validationError("id", "id must be a positive integer")
+		return validationError("id", "task ID must be a positive integer")
 	}
 	return nil
 }
@@ -255,7 +255,7 @@ func ValidateID(id int64) error {
 // NormalizeUpdate validates a partial update and returns normalized copies.
 func NormalizeUpdate(input UpdateInput) (UpdateInput, error) {
 	if input.Title == nil && input.Completed == nil {
-		return UpdateInput{}, validationError("body", "update must include title or completed")
+		return UpdateInput{}, validationError("update", "update must include title or completed")
 	}
 
 	var normalized UpdateInput
@@ -310,4 +310,13 @@ func ValidateTask(value Task) error {
 
 func validationError(field, message string) error {
 	return &ValidationError{Field: field, Message: message}
+}
+
+func isPhysicalLineBreak(r rune) bool {
+	switch r {
+	case '\n', '\v', '\f', '\r', '\u001c', '\u001d', '\u001e', '\u0085', '\u2028', '\u2029':
+		return true
+	default:
+		return false
+	}
 }
