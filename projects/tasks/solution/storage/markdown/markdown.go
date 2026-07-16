@@ -291,7 +291,7 @@ func (r *Repository) save(value document) (err error) {
 	if err = os.Rename(temporaryPath, r.path); err != nil {
 		return err
 	}
-	return nil
+	return syncDirectory(directory)
 }
 
 func serialize(value document) string {

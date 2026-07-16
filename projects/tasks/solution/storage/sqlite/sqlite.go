@@ -42,12 +42,9 @@ func Open(path string) (*Repository, error) {
 	if err != nil {
 		return nil, task.WrapStorage("open sqlite", err)
 	}
-	dsn := &url.URL{Scheme: "file", Path: filepath.ToSlash(absolute)}
-	query := url.Values{}
-	query.Set("_pragma", "busy_timeout(5000)")
-	dsn.RawQuery = query.Encode()
+	dsn := sqliteDSN(absolute)
 
-	db, err := sql.Open("sqlite", dsn.String())
+	db, err := sql.Open("sqlite", dsn)
 	if err != nil {
 		return nil, task.WrapStorage("open sqlite", err)
 	}
@@ -60,6 +57,20 @@ func Open(path string) (*Repository, error) {
 		return nil, err
 	}
 	return repository, nil
+}
+
+func sqliteDSN(absolute string) string {
+	uriPath := filepath.ToSlash(absolute)
+	if len(uriPath) >= 3 &&
+		((uriPath[0] >= 'A' && uriPath[0] <= 'Z') || (uriPath[0] >= 'a' && uriPath[0] <= 'z')) &&
+		uriPath[1] == ':' && uriPath[2] == '/' {
+		uriPath = "/" + uriPath
+	}
+	dsn := &url.URL{Scheme: "file", Path: uriPath}
+	query := url.Values{}
+	query.Set("_pragma", "busy_timeout(5000)")
+	dsn.RawQuery = query.Encode()
+	return dsn.String()
 }
 
 // Close closes the repository's database exactly once.
