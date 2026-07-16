@@ -180,7 +180,7 @@ func assertValidationRules(t *testing.T, harness TaskHarness) {
 		t.Fatalf("ValidateID(1) error = %v", err)
 	}
 
-	t.Run("empty update", func(t *testing.T) {
+	t.Run("both update fields absent", func(t *testing.T) {
 		_, err := harness.NormalizeUpdate(UpdateInput{})
 		assertValidation(t, harness, err, "body", "update must include title or completed")
 	})
@@ -323,7 +323,7 @@ func assertService(t *testing.T, harness TaskHarness) {
 				_, err := service.Update(context.Background(), 0, UpdateInput{Completed: &completed})
 				return err
 			}},
-			{name: "empty update", call: func(service Service) error {
+			{name: "both update fields absent", call: func(service Service) error {
 				_, err := service.Update(context.Background(), 1, UpdateInput{})
 				return err
 			}},

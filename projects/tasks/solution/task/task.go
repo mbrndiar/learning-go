@@ -39,7 +39,8 @@ type CreateInput struct {
 	Title string
 }
 
-// UpdateInput is a partial task update. Nil fields are omitted.
+// UpdateInput is a validated partial update. Nil means absent; boundary
+// adapters must reject explicit null before constructing this value.
 type UpdateInput struct {
 	Title     *string
 	Completed *bool
