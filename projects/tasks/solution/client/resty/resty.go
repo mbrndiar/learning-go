@@ -1,15 +1,14 @@
-// Package nethttp implements the Task client with the standard net/http stack.
-package nethttp
+// Package resty implements the Task client with Resty.
+package resty
 
 import (
-	"bytes"
 	"context"
 	"errors"
-	"io"
 	"net/http"
 	"net/url"
 	"strconv"
 
+	restylib "github.com/go-resty/resty/v2"
 	"github.com/mbrndiar/learning-go/projects/tasks/solution/client"
 	"github.com/mbrndiar/learning-go/projects/tasks/solution/client/internal/httpcontract"
 	"github.com/mbrndiar/learning-go/projects/tasks/solution/task"
@@ -17,23 +16,23 @@ import (
 
 type Client struct {
 	baseURL *url.URL
-	http    *http.Client
+	resty   *restylib.Client
 }
 
 var _ client.Transport = (*Client)(nil)
 
 func (c *Client) Close() error {
-	if c != nil && c.http != nil {
-		c.http.CloseIdleConnections()
+	if c != nil && c.resty != nil && c.resty.GetClient() != nil {
+		c.resty.GetClient().CloseIdleConnections()
 	}
 	return nil
 }
 
 func New(config client.Config) (*Client, error) {
-	return NewWithHTTPClient(config, nil)
+	return NewWithRestyClient(config, nil)
 }
 
-func NewWithHTTPClient(config client.Config, httpClient *http.Client) (*Client, error) {
+func NewWithRestyClient(config client.Config, restyClient *restylib.Client) (*Client, error) {
 	validated, err := config.Validate()
 	if err != nil {
 		return nil, err
@@ -42,19 +41,18 @@ func NewWithHTTPClient(config client.Config, httpClient *http.Client) (*Client, 
 	if err != nil {
 		return nil, err
 	}
-	if httpClient == nil {
-		httpClient = &http.Client{
-			Timeout: validated.Timeout,
-			CheckRedirect: func(_ *http.Request, _ []*http.Request) error {
-				return http.ErrUseLastResponse
-			},
-		}
-	} else if httpClient.Timeout <= 0 || httpClient.Timeout > validated.Timeout {
-		copy := *httpClient
-		copy.Timeout = validated.Timeout
-		httpClient = &copy
+	if restyClient == nil {
+		restyClient = restylib.New()
 	}
-	return &Client{baseURL: baseURL, http: httpClient}, nil
+	if restyClient.GetClient() == nil {
+		return nil, &client.ConfigError{Field: "client", Message: "Resty client must have an HTTP client"}
+	}
+	if timeout := restyClient.GetClient().Timeout; timeout <= 0 || timeout > validated.Timeout {
+		restyClient.SetTimeout(validated.Timeout)
+	}
+	restyClient.SetRetryCount(0)
+	restyClient.SetRedirectPolicy(restylib.NoRedirectPolicy())
+	return &Client{baseURL: baseURL, resty: restyClient}, nil
 }
 
 func BuildURL(baseURL string, segments []string, query url.Values) (string, error) {
@@ -118,37 +116,34 @@ func (c *Client) exchange(
 	errorStatuses map[int]bool,
 	target any,
 ) error {
-	if c == nil || c.http == nil || c.baseURL == nil {
+	if c == nil || c.resty == nil || c.baseURL == nil {
 		return &client.ConnectionError{Err: errors.New("client is not initialized")}
 	}
 	requestURL, err := httpcontract.BuildURL(c.baseURL.String(), segments, query)
 	if err != nil {
 		return &client.ConnectionError{Err: err}
 	}
-	var body io.Reader
+	request := c.resty.R().SetContext(ctx).SetDoNotParseResponse(true)
 	if jsonBody != nil {
 		encoded, encodeErr := httpcontract.EncodeJSON(jsonBody)
 		if encodeErr != nil {
 			return &client.ConnectionError{Err: encodeErr}
 		}
-		body = bytes.NewReader(encoded)
+		request.SetHeader("Content-Type", "application/json; charset=utf-8")
+		request.SetBody(encoded)
 	}
-	request, err := http.NewRequestWithContext(ctx, method, requestURL, body)
-	if err != nil {
-		return &client.ConnectionError{Err: err}
-	}
-	if jsonBody != nil {
-		request.Header.Set("Content-Type", "application/json; charset=utf-8")
-	}
-	response, err := c.http.Do(request)
+	response, err := request.Execute(method, requestURL)
 	if err != nil {
 		return httpcontract.ConnectionFailure(err)
 	}
-	defer response.Body.Close()
+	if response == nil || response.RawResponse == nil || response.RawBody() == nil {
+		return &client.ResponseError{Message: "response was not initialized"}
+	}
+	defer response.RawBody().Close()
 	return httpcontract.ReadResponse(
-		response.StatusCode,
-		response.Header,
-		response.Body,
+		response.StatusCode(),
+		response.Header(),
+		response.RawBody(),
 		successStatus,
 		errorStatuses,
 		target,

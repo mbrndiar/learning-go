@@ -1,2 +1,2 @@
-// Package m4 will test the Chi server and Resty client.
+// Package m4 provides shared Chi/Resty milestone adapter contracts.
 package m4

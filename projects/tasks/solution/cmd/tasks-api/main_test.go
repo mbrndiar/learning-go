@@ -9,7 +9,7 @@ func TestUnsupportedServerDoesNotCreateStorage(t *testing.T) {
 	path := ".m3-should-not-exist.db"
 	_ = os.Remove(path)
 	t.Cleanup(func() { _ = os.Remove(path) })
-	if exit := run([]string{"--server", "chi", "--data", path}); exit != 2 {
+	if exit := run([]string{"--server", "gin", "--data", path}); exit != 2 {
 		t.Fatalf("exit = %d", exit)
 	}
 	if _, err := os.Stat(path); !os.IsNotExist(err) {

@@ -1,0 +1,142 @@
+package chi
+
+import (
+	"log/slog"
+	"net/http"
+
+	chilib "github.com/go-chi/chi/v5"
+	"github.com/mbrndiar/learning-go/projects/tasks/solution/api"
+)
+
+type Handler struct {
+	service api.Service
+	logger  *slog.Logger
+	router  chilib.Router
+}
+
+func New(service api.Service, logger *slog.Logger) http.Handler {
+	if logger == nil {
+		logger = slog.Default()
+	}
+	handler := &Handler{service: service, logger: logger, router: chilib.NewRouter()}
+	handler.router.Get("/health", handler.health)
+	handler.router.Get("/tasks", handler.list)
+	handler.router.Post("/tasks", handler.create)
+	handler.router.Get("/tasks/{id}", handler.get)
+	handler.router.Patch("/tasks/{id}", handler.update)
+	handler.router.Delete("/tasks/{id}", handler.delete)
+	handler.router.NotFound(func(writer http.ResponseWriter, _ *http.Request) {
+		api.WriteError(writer, api.RouteNotFound())
+	})
+	handler.router.MethodNotAllowed(func(writer http.ResponseWriter, request *http.Request) {
+		allow := allowedMethods(request.URL.Path)
+		writer.Header().Set("Allow", allow)
+		api.WriteError(writer, api.MethodNotAllowed(allow))
+	})
+	return handler
+}
+
+func (h *Handler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	h.router.ServeHTTP(writer, request)
+}
+
+func (h *Handler) health(writer http.ResponseWriter, request *http.Request) {
+	if boundaryError := api.ValidateNoQuery(request.URL.Query()); boundaryError != nil {
+		api.WriteError(writer, boundaryError)
+		return
+	}
+	api.WriteJSON(writer, http.StatusOK, map[string]string{"status": "ok"})
+}
+
+func (h *Handler) list(writer http.ResponseWriter, request *http.Request) {
+	filter, boundaryError := api.ParseListFilter(request.URL.Query())
+	if boundaryError != nil {
+		api.WriteError(writer, boundaryError)
+		return
+	}
+	values, err := h.service.List(request.Context(), filter)
+	if err != nil {
+		api.WriteError(writer, api.MapError(err, h.logger))
+		return
+	}
+	api.WriteJSON(writer, http.StatusOK, api.TaskDTOs(values))
+}
+
+func (h *Handler) create(writer http.ResponseWriter, request *http.Request) {
+	if boundaryError := api.ValidateNoQuery(request.URL.Query()); boundaryError != nil {
+		api.WriteError(writer, boundaryError)
+		return
+	}
+	input, boundaryError := api.DecodeCreate(request)
+	if boundaryError != nil {
+		api.WriteError(writer, boundaryError)
+		return
+	}
+	value, err := h.service.Create(request.Context(), input)
+	if err != nil {
+		api.WriteError(writer, api.MapError(err, h.logger))
+		return
+	}
+	api.WriteJSON(writer, http.StatusCreated, api.TaskDTO(value))
+}
+
+func (h *Handler) get(writer http.ResponseWriter, request *http.Request) {
+	h.withID(writer, request, func(id int64) {
+		value, err := h.service.Get(request.Context(), id)
+		if err != nil {
+			api.WriteError(writer, api.MapError(err, h.logger))
+			return
+		}
+		api.WriteJSON(writer, http.StatusOK, api.TaskDTO(value))
+	})
+}
+
+func (h *Handler) update(writer http.ResponseWriter, request *http.Request) {
+	h.withID(writer, request, func(id int64) {
+		input, boundaryError := api.DecodeUpdate(request)
+		if boundaryError != nil {
+			api.WriteError(writer, boundaryError)
+			return
+		}
+		value, err := h.service.Update(request.Context(), id, input)
+		if err != nil {
+			api.WriteError(writer, api.MapError(err, h.logger))
+			return
+		}
+		api.WriteJSON(writer, http.StatusOK, api.TaskDTO(value))
+	})
+}
+
+func (h *Handler) delete(writer http.ResponseWriter, request *http.Request) {
+	h.withID(writer, request, func(id int64) {
+		if err := h.service.Delete(request.Context(), id); err != nil {
+			api.WriteError(writer, api.MapError(err, h.logger))
+			return
+		}
+		writer.WriteHeader(http.StatusNoContent)
+	})
+}
+
+func (h *Handler) withID(writer http.ResponseWriter, request *http.Request, action func(int64)) {
+	if boundaryError := api.ValidateNoQuery(request.URL.Query()); boundaryError != nil {
+		api.WriteError(writer, boundaryError)
+		return
+	}
+	id, boundaryError := api.ParseID(chilib.URLParam(request, "id"))
+	if boundaryError != nil {
+		api.WriteError(writer, boundaryError)
+		return
+	}
+	action(id)
+}
+
+func allowedMethods(path string) string {
+	switch path {
+	case "/health":
+		return "GET"
+	case "/tasks":
+		return "GET, POST"
+	default:
+		return "GET, PATCH, DELETE"
+	}
+}

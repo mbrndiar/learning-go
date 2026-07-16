@@ -12,7 +12,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mbrndiar/learning-go/projects/tasks/solution/api/nethttp"
+	apichi "github.com/mbrndiar/learning-go/projects/tasks/solution/api/chi"
+	apinethttp "github.com/mbrndiar/learning-go/projects/tasks/solution/api/nethttp"
 	"github.com/mbrndiar/learning-go/projects/tasks/solution/storage/markdown"
 	"github.com/mbrndiar/learning-go/projects/tasks/solution/storage/sqlite"
 	"github.com/mbrndiar/learning-go/projects/tasks/solution/task"
@@ -51,7 +52,7 @@ func (config Config) Validate() (Config, error) {
 	if config.Server == "" {
 		config.Server = "nethttp"
 	}
-	if config.Server != "nethttp" {
+	if config.Server != "nethttp" && config.Server != "chi" {
 		return Config{}, fmt.Errorf("%w: server %q is not implemented", ErrInvalidConfig, config.Server)
 	}
 	if config.Backend != "sqlite" && config.Backend != "markdown" {
@@ -201,7 +202,13 @@ func Run(ctx context.Context, config Config, logger *slog.Logger) error {
 	defer closeRepository()
 
 	service := task.NewService(repository)
-	handler := nethttp.New(service, logger)
+	var handler http.Handler
+	switch validated.Server {
+	case "nethttp":
+		handler = apinethttp.New(service, logger)
+	case "chi":
+		handler = apichi.New(service, logger)
+	}
 	active, err := New(validated, handler)
 	if err != nil {
 		return err

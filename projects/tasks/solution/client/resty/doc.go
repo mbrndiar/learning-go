@@ -1,2 +1,2 @@
-// Package resty will call Task servers through the Resty client.
+// Package resty calls Task servers through the Resty client.
 package resty

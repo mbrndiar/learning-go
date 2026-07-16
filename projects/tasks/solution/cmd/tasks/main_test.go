@@ -7,7 +7,11 @@ func TestSelectClient(t *testing.T) {
 	if err != nil || selected != "nethttp" || len(remaining) != 3 || remaining[2] != "list" {
 		t.Fatalf("selection = %q %v %v", selected, remaining, err)
 	}
-	if exit := run([]string{"--client", "resty", "list"}); exit != 2 {
-		t.Fatalf("resty exit = %d", exit)
+	selected, remaining, err = selectClient([]string{"--client=resty", "list"})
+	if err != nil || selected != "resty" || len(remaining) != 1 || remaining[0] != "list" {
+		t.Fatalf("resty selection = %q %v %v", selected, remaining, err)
+	}
+	if exit := run([]string{"--client", "gin", "list"}); exit != 2 {
+		t.Fatalf("unsupported client exit = %d", exit)
 	}
 }

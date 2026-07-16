@@ -15,7 +15,14 @@ import (
 	"github.com/mbrndiar/learning-go/projects/tasks/solution/client"
 	clientnethttp "github.com/mbrndiar/learning-go/projects/tasks/solution/client/nethttp"
 	"github.com/mbrndiar/learning-go/projects/tasks/solution/task"
+	"github.com/mbrndiar/learning-go/projects/tasks/tests/m4"
 )
+
+func TestMilestone4ClientContract(t *testing.T) {
+	m4.AssertClientContract(t, func(config client.Config) (client.Transport, error) {
+		return clientnethttp.New(config)
+	})
+}
 
 func TestBuildURLAndJSONRequest(t *testing.T) {
 	built, err := clientnethttp.BuildURL("https://example.com/api", []string{"tasks", "a b", "雪"},

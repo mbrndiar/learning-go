@@ -1,2 +1,2 @@
-// Package chi will expose the Task contract through the Chi router.
+// Package chi exposes the Task contract through the Chi router.
 package chi

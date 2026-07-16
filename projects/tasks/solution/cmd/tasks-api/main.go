@@ -22,7 +22,7 @@ func run(args []string) int {
 	config := server.DefaultConfig()
 	flags := flag.NewFlagSet("tasks-api", flag.ContinueOnError)
 	flags.SetOutput(os.Stderr)
-	flags.StringVar(&config.Server, "server", config.Server, "HTTP server (nethttp)")
+	flags.StringVar(&config.Server, "server", config.Server, "HTTP server (nethttp or chi)")
 	flags.StringVar(&config.Backend, "backend", config.Backend, "storage backend (sqlite or markdown)")
 	flags.StringVar(&config.Data, "data", config.Data, "storage path")
 	flags.StringVar(&config.Host, "host", config.Host, "listen host")

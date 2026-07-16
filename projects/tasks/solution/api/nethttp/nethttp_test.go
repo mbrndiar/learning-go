@@ -12,10 +12,18 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/mbrndiar/learning-go/projects/tasks/solution/api"
 	"github.com/mbrndiar/learning-go/projects/tasks/solution/api/nethttp"
 	"github.com/mbrndiar/learning-go/projects/tasks/solution/task"
 	"github.com/mbrndiar/learning-go/projects/tasks/tests/m3"
+	"github.com/mbrndiar/learning-go/projects/tasks/tests/m4"
 )
+
+func TestMilestone4HTTPContract(t *testing.T) {
+	m4.AssertServerContract(t, func(service api.Service, logger *slog.Logger) http.Handler {
+		return nethttp.New(service, logger)
+	})
+}
 
 type memoryService struct {
 	nextID int64

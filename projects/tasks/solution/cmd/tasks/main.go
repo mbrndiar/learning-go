@@ -9,6 +9,7 @@ import (
 	"github.com/mbrndiar/learning-go/projects/tasks/solution/cli"
 	"github.com/mbrndiar/learning-go/projects/tasks/solution/client"
 	clientnethttp "github.com/mbrndiar/learning-go/projects/tasks/solution/client/nethttp"
+	clientresty "github.com/mbrndiar/learning-go/projects/tasks/solution/client/resty"
 )
 
 func main() {
@@ -21,12 +22,19 @@ func run(args []string) int {
 		fmt.Fprintln(os.Stderr, err)
 		return cli.ExitUsage
 	}
-	if clientName != "nethttp" {
+	if clientName != "nethttp" && clientName != "resty" {
 		fmt.Fprintf(os.Stderr, "configuration: client %q is not implemented\n", clientName)
 		return cli.ExitUsage
 	}
 	factory := func(config client.Config) (client.Transport, error) {
-		return clientnethttp.New(config)
+		switch clientName {
+		case "nethttp":
+			return clientnethttp.New(config)
+		case "resty":
+			return clientresty.New(config)
+		default:
+			panic("validated client selection")
+		}
 	}
 	return cli.Run(remaining, factory, os.Stdout, os.Stderr)
 }
@@ -38,7 +46,7 @@ func selectClient(args []string) (string, []string, error) {
 		switch args[index] {
 		case "--client":
 			if index+1 >= len(args) {
-				return "", nil, fmt.Errorf("usage: tasks --client nethttp [options] command")
+				return "", nil, fmt.Errorf("usage: tasks --client nethttp|resty [options] command")
 			}
 			selected = args[index+1]
 			index++
