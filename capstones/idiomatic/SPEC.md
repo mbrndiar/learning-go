@@ -9,9 +9,9 @@ acceptance criteria are normative. Package decomposition and concrete
 goroutine/channel design are not, provided ownership and shutdown are explicit.
 
 Both capstone solutions are complete and included in the course quality gates.
-The connected Task projects under [`project/`](../../project/README.md) remain
-available as completed migration/reference examples, not as unfinished
-replacements.
+The superseded connected Task projects remain available in their
+[last pre-removal snapshot](../../README.md#historical-task-project-migration)
+as migration/reference examples, not as unfinished replacements.
 
 ## Bounded problem
 
@@ -370,9 +370,9 @@ loopback listeners, or elapsed-time performance assertions are permitted.
 - Module language version: Go `1.25.0`.
 - CI/runtime matrix: Go `1.25.x` and `1.26.x`.
 - Capstone runtime/test dependencies: Go standard library only.
-- Existing `modernc.org/sqlite v1.53.0` remains pinned for the retained Task
-  projects and comparative capstone but is rejected for this capstone; history
-  is bounded in memory to avoid a second database project.
+- Existing `modernc.org/sqlite v1.53.0` remains pinned for the comparative
+  capstone but is rejected for this capstone; history is bounded in memory to
+  avoid a second database project.
 - Existing tool pins used by CI remain `staticcheck@v0.7.0` and
   `govulncheck@v1.6.0`.
 - Rejected: routers, schedulers, retry libraries, assertion suites, goroutine
@@ -427,17 +427,15 @@ harnesses, and runs the pinned staticcheck and govulncheck commands described in
 Reuse/refactor:
 
 - context-aware HTTP clients, bounded bodies/timeouts, `httptest`, method-aware
-  handlers, structured JSON errors, `slog`, and graceful shutdown from
-  [`project/taskapi/`](../../project/taskapi/README.md) and
-  [`project/taskclient/`](../../project/taskclient/README.md);
+  handlers, structured JSON errors, `slog`, and graceful shutdown from the
+  historical `project/taskapi/` and `project/taskclient/` paths;
 - consumer-owned interfaces, explicit error wrapping, deterministic contract
-  helpers, and temporary resources from
-  [`project/taskmanager/`](../../project/taskmanager/README.md);
+  helpers, and temporary resources from the historical
+  `project/taskmanager/` path;
 - worker ownership, channel closing, cancellation, and race-test patterns from
   the concurrency lessons/exercises.
 
 Do not migrate Task validation, CRUD, storage, REST resource routes, or the Task
-SQLite schema. The old project remains preserved as a completed comparison
-surface; no deletion is part of this capstone migration. The durable
-path-by-path mapping is in the
-[`project/` old-to-new concept map](../../project/README.md#-old-to-new-concept-map).
+SQLite schema. The immutable comparison source is commit
+[`b3211f9`](https://github.com/mbrndiar/learning-go/tree/b3211f99fc2ce5da54b88c59da3f12aacbed30ff/project)
+at path `project/`; the live repository contains only the current capstones.

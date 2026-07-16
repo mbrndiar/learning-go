@@ -12,11 +12,11 @@ boundaries intentionally match so shared contract helpers and milestone tests
 can target either implementation without changing behavior. Both solutions are
 complete; both starters remain explicit guided TODOs.
 
-These are the current course capstones. The earlier connected Task code remains
-under [`project/`](../project/README.md) as a completed migration/reference
-surface; use its
-[old-to-new concept map](../project/README.md#-old-to-new-concept-map) rather
-than adding new capstone work there.
+These are the current course capstones. The earlier connected Task code is
+available only in the last pre-removal snapshot, commit
+[`b3211f9`](https://github.com/mbrndiar/learning-go/tree/b3211f99fc2ce5da54b88c59da3f12aacbed30ff/project)
+at path `project/`. Use it as historical migration context rather than adding
+new capstone work there.
 
 ## Targeted workflow
 

@@ -50,12 +50,7 @@ go test \
   ./capstones/idiomatic/solution/... \
   ./capstones/idiomatic/tests/... \
   ./capstones
-
-go test ./project/...
 ```
-
-The `project/` packages remain in this gate as completed migration/reference
-examples; they are not the current learner capstones.
 
 ## Module, formatting, vet, and links
 
@@ -78,7 +73,6 @@ The Go 1.26 CI job race-checks the code that owns concurrency, storage, HTTP, or
 process boundaries:
 
 ```bash
-go test -race ./project/...
 go test -race \
   ./capstones/comparative/tests/... \
   ./capstones/idiomatic/solution/monitor/... \
@@ -103,16 +97,10 @@ failing exercise starter tests and would obscure the defined race surface.
 
 ## Coverage
 
-CI enforces 85% for the retained Task packages, 85% for the idiomatic monitor,
-and 75% for the comparative command/process implementation:
+CI enforces 85% for the idiomatic monitor and 75% for the comparative
+command/process implementation:
 
 ```bash
-go test -coverprofile=coverage.out \
-  ./project/taskmanager \
-  ./project/taskapi \
-  ./project/taskclient
-bash scripts/check-coverage.sh coverage.out 85
-
 go test -coverprofile=idiomatic-coverage.out \
   ./capstones/idiomatic/solution/monitor/...
 bash scripts/check-coverage.sh idiomatic-coverage.out 85
@@ -173,7 +161,6 @@ go install honnef.co/go/tools/cmd/staticcheck@v0.7.0
   go list ./capstones/idiomatic/solution/...
   go list ./capstones/idiomatic/tests/...
   go list ./capstones/testsupport
-  go list ./project/...
   go list ./tools/...
 } | xargs "$(go env GOPATH)/bin/staticcheck"
 

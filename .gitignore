@@ -28,8 +28,6 @@ go.work.sum
 .env
 
 # Capstone runtime data
-project/taskmanager/tasks.json
-project/taskapi/tasks.db
 capstones/comparative/.conformance/
 capstones/comparative/.coverage/
 

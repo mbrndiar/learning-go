@@ -85,7 +85,7 @@ At the course root, `go test ./...` runs all intentionally incomplete exercise
 starter tests, so a clean learner checkout is expected to fail that raw command.
 This is deliberate, not a CI exception being ignored. The course workflow
 compiles starters without running their tests and separately tests every
-completed lesson, solution, capstone harness, and retained Task package. Use
+completed lesson, solution, and capstone harness. Use
 [`QUALITY.md`](QUALITY.md) for the exact CI-defined commands and tool pins.
 
 ## Troubleshooting

@@ -25,8 +25,8 @@ By the end of the course, you will be able to:
 
 - The latest patch release of Go 1.25 or newer
 - Git for cloning the repository
-- The lessons themselves use the standard library. The capstone additionally
-  uses a pinned pure-Go SQLite driver.
+- The lessons themselves use the standard library. The comparative capstone
+  additionally uses a pinned pure-Go SQLite driver.
 
 See [`docs/SETUP.md`](docs/SETUP.md) for installation, editor setup, toolchain
 selection, and troubleshooting.
@@ -43,7 +43,7 @@ For an unchanged learner checkout, a raw `go test ./...` is intentionally not
 the repository health check: it runs the unfinished exercise starter tests and
 fails until those exercises are implemented. CI instead compiles starter
 packages without running their behavior tests, then tests lessons, reference
-solutions, capstone harnesses/solutions, and the retained Task projects. See
+solutions, and capstone harnesses/solutions. See
 [`docs/QUALITY.md`](docs/QUALITY.md) for the exact test, race, coverage, fuzz,
 static-analysis, vulnerability, and link-check commands.
 
@@ -86,18 +86,14 @@ Both have matching starter/solution package boundaries and reusable contract
 test support. Each includes a complete reference solution and guided
 five-milestone starter; unfinished starter behavior remains explicit.
 
-The connected [Task projects](project/README.md) remain available as completed
-legacy integration examples:
+### Historical Task-project migration
 
-```text
-Task Manager CLI -> Manager -> Storage
-                             |-> JSON file
-                             `-> REST client -> REST API -> SQLite
-```
-
-Use their [old-to-new concept map](project/README.md#-old-to-new-concept-map)
-when moving from the Task code to the current capstones. The old code remains
-available for comparison, but new capstone work belongs under `capstones/`.
+The superseded connected Task Manager, client, and API were removed after the
+current capstones became canonical. For comparison or migration study, their
+last pre-removal snapshot is commit
+[`b3211f9`](https://github.com/mbrndiar/learning-go/tree/b3211f99fc2ce5da54b88c59da3f12aacbed30ff/project)
+at path `project/`. Treat that immutable snapshot as historical guidance; new
+capstone work belongs under `capstones/`.
 
 ## 🗒️ Cheat sheet
 

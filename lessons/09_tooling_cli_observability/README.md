@@ -140,7 +140,6 @@ go test ./capstones/comparative/starter/kvstore \
   ./capstones/comparative/solution/... ./capstones/comparative/tests/... \
   ./capstones/idiomatic/starter/monitor \
   ./capstones/idiomatic/solution/... ./capstones/idiomatic/tests/... ./capstones
-go test ./project/...
 go run ./tools/checklinks
 ```
 

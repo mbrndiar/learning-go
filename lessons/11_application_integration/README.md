@@ -195,6 +195,6 @@ go test -race ./lessons/11_application_integration/...
 Begin the [idiomatic health-monitor capstone](../../capstones/idiomatic/README.md):
 wire method-aware routes, a strict JSON boundary, an outbound HTTP probe with a
 bounded context, an interface-backed history layer, and graceful shutdown into
-one runnable service. Use the retained Task projects'
-[old-to-new concept map](../../project/README.md#-old-to-new-concept-map) to
-identify reusable patterns without copying the Task CRUD model.
+one runnable service. The
+[historical Task-project snapshot](../../README.md#historical-task-project-migration)
+can help identify reusable patterns without copying the Task CRUD model.
