@@ -487,7 +487,6 @@
               "stderr": ""
             },
             "assert": {
-              "duration_at_least_ms": 9500,
               "duration_less_than_ms": 15000
             }
           }

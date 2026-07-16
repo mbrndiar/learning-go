@@ -194,9 +194,9 @@ clean helper exit.
 
 For the timeout case, the helper remains locked until after the CLI returns
 `busy`; the runner then releases it. The CLI process timeout is at least
-15,000 ms. The expected elapsed lower bound is 9,500 ms to allow timer
-granularity while still proving that a materially shorter timeout was not
-configured.
+15,000 ms. The scenario keeps that upper hang bound but no elapsed-time lower
+bound: SQLite counts requested busy-handler sleeps, while an interrupted system
+sleep can return before that requested wall-clock interval.
 
 ### 4.5 SQLite setup in process scenarios
 
