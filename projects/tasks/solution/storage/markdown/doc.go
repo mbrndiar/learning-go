@@ -1,2 +1,2 @@
-// Package markdown will persist tasks in a versioned Markdown checklist.
+// Package markdown persists tasks in a versioned Markdown checklist.
 package markdown

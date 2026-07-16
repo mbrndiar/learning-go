@@ -1,2 +1,2 @@
-// Package m2 will test SQLite and Markdown persistence parity.
+// Package m2 provides the reusable Milestone 2 repository contract.
 package m2

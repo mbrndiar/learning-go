@@ -1,2 +1,2 @@
-// Package sqlite will persist tasks through database/sql and SQLite.
+// Package sqlite persists tasks through database/sql and SQLite.
 package sqlite
