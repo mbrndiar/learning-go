@@ -15,7 +15,8 @@ independently.
 8. [`08_testing/`](08_testing/)
 9. [`09_tooling_cli_observability/`](09_tooling_cli_observability/)
 10. [`10_concurrency/`](10_concurrency/)
-11. [`11_application_integration/`](11_application_integration/)
+11. [`11_sql_and_sqlite/`](11_sql_and_sqlite/) — relational modeling,
+    parameterized SQL, transactions, and repositories with SQLite.
 
 ## ▶️ How to use a module
 
@@ -39,6 +40,5 @@ zero-value behavior, error paths, and why a design is race safe.
 - After modules 5-6: model and persist a collection of structs.
 - After modules 7-9: package, test, benchmark, and instrument a CLI.
 - After module 10: implement a bounded worker pool with cancellation.
-- After module 11: begin the idiomatic capstone, using the
-  [historical Task-project snapshot](../README.md#historical-task-project-migration)
-  to recognize the HTTP, interface, and testing patterns.
+- After module 11: design a relational schema and implement a tested
+  `database/sql` repository with one atomic multi-step operation.

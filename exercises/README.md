@@ -30,7 +30,7 @@ packages without running their tests and runs every solution package.
 8. [`08_testing/`](08_testing/)
 9. [`09_tooling_cli_observability/`](09_tooling_cli_observability/)
 10. [`10_concurrency/`](10_concurrency/)
-11. [`11_application_integration/`](11_application_integration/)
+11. [`11_sql_and_sqlite/`](11_sql_and_sqlite/)
 
 ## 🧩 Problem-solving process
 
