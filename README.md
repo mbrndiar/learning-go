@@ -2,7 +2,7 @@
 
 A complete, hands-on introduction to Go for independent learners. The course
 combines written explanations, small runnable programs, exercises with tests
-and reference solutions, review questions, a connected capstone project, and a
+and reference solutions, review questions, two staged capstone projects, and a
 syntax reference. No previous programming experience is assumed.
 
 ## 🎯 What you will learn
@@ -19,14 +19,15 @@ By the end of the course, you will be able to:
 - build command-line programs and structured logs;
 - design race-safe concurrent programs with goroutines, channels, and contexts;
 - build HTTP/JSON services and persist data through `database/sql`; and
-- design, test, and extend a connected command-line application.
+- design, test, and extend service and command-line applications.
 
 ## ✅ Requirements
 
 - The latest patch release of Go 1.25 or newer
 - Git for cloning the repository
-- The lessons themselves use the standard library. The comparative capstone
-  additionally uses a pinned pure-Go SQLite driver.
+- Most lessons use the standard library. Module 11 and the comparative capstone
+  use the pinned pure-Go SQLite driver; Module 12 adds pinned Chi, Gin, and
+  Resty examples.
 
 See [`docs/SETUP.md`](docs/SETUP.md) for installation, editor setup, toolchain
 selection, and troubleshooting.
@@ -171,18 +172,23 @@ concurrency, HTTP, and tooling reference.
     - [`08_worker_pool/main.go`](lessons/10_concurrency/08_worker_pool/main.go) — bounded worker pools
     - [`09_context_cancellation/main.go`](lessons/10_concurrency/09_context_cancellation/main.go) — cancellation with contexts
     - [`10_goroutine_leaks_and_races/main.go`](lessons/10_concurrency/10_goroutine_leaks_and_races/main.go) — leak and race prevention
-11. **[Application Integration](lessons/11_application_integration/)**
-    - [`01_http_routing_pathvalue/main.go`](lessons/11_application_integration/01_http_routing_pathvalue/main.go) — method-aware routing and path values
-    - [`02_json_request_response/main.go`](lessons/11_application_integration/02_json_request_response/main.go) — strict JSON boundaries
-    - [`03_middleware_functions/main.go`](lessons/11_application_integration/03_middleware_functions/main.go) — composable middleware
-    - [`04_http_client_context_timeout/main.go`](lessons/11_application_integration/04_http_client_context_timeout/main.go) — clients, contexts, and timeouts
-    - [`05_database_sql_concepts/main.go`](lessons/11_application_integration/05_database_sql_concepts/main.go) — `database/sql` abstractions
-    - [`06_parameterized_sql_transactions/main.go`](lessons/11_application_integration/06_parameterized_sql_transactions/main.go) — parameters and transactions
-    - [`07_graceful_shutdown/main.go`](lessons/11_application_integration/07_graceful_shutdown/main.go) — server shutdown and cleanup
+11. **[Relational Databases and SQL with SQLite](lessons/11_sql_and_sqlite/)**
+    - [`01_relational_model_and_database_sql/main.go`](lessons/11_sql_and_sqlite/01_relational_model_and_database_sql/main.go) — relations, keys, constraints, and `database/sql`
+    - [`02_parameterized_crud_and_row_mapping/main.go`](lessons/11_sql_and_sqlite/02_parameterized_crud_and_row_mapping/main.go) — parameterized CRUD and row mapping
+    - [`03_joins_aggregates_and_indexes/main.go`](lessons/11_sql_and_sqlite/03_joins_aggregates_and_indexes/main.go) — joins, aggregates, and indexes
+    - [`04_transactions_and_sqlite/main.go`](lessons/11_sql_and_sqlite/04_transactions_and_sqlite/main.go) — atomic transactions and SQLite specifics
+    - [`05_repository_pattern/main.go`](lessons/11_sql_and_sqlite/05_repository_pattern/main.go) — narrow persistence interfaces
+12. **[REST APIs and HTTP Clients](lessons/12_rest_apis_and_clients/)**
+    - [`01_http_routing_and_json/main.go`](lessons/12_rest_apis_and_clients/01_http_routing_and_json/main.go) — method-aware routes and strict JSON
+    - [`02_middleware_and_error_mapping/main.go`](lessons/12_rest_apis_and_clients/02_middleware_and_error_mapping/main.go) — middleware and error responses
+    - [`03_http_client_context_timeout/main.go`](lessons/12_rest_apis_and_clients/03_http_client_context_timeout/main.go) — clients, contexts, and timeouts
+    - [`04_router_framework_comparison/main.go`](lessons/12_rest_apis_and_clients/04_router_framework_comparison/main.go) — runnable net/http, Chi, and Gin comparison
+    - [`05_resty_client/main.go`](lessons/12_rest_apis_and_clients/05_resty_client/main.go) — configured Resty requests and typed responses
+    - [`06_graceful_shutdown/main.go`](lessons/12_rest_apis_and_clients/06_graceful_shutdown/main.go) — server shutdown and cleanup
 
-Work through the modules in order. Module 11 bridges directly into the
-capstone; module 10 provides the context cancellation and goroutine ownership
-used by production-style HTTP programs.
+Work through the modules in order. Module 10 establishes concurrency and
+cancellation, Module 11 adds relational persistence, and Module 12 applies those
+boundaries to HTTP services and clients before the capstones.
 
 ## 🆘 Getting help from the material
 

@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/http/httptest"
 	"strconv"
 	"strings"
 	"sync/atomic"
@@ -77,6 +78,9 @@ func writeError(w http.ResponseWriter, status int, message string) {
 }
 
 func main() {
-	log.Println("example handler ready at :8080")
-	log.Fatal(http.ListenAndServe(":8080", (&API{}).Handler()))
+	handler := (&API{}).Handler()
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/items/7", nil)
+	handler.ServeHTTP(recorder, request)
+	fmt.Printf("status=%d body=%s", recorder.Code, recorder.Body.String())
 }

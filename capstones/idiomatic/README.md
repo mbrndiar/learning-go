@@ -27,6 +27,11 @@ depends on `domain` and `history`; and `cli` is the outer application boundary.
 The command imports `cli`. This arrangement keeps concurrency and HTTP behavior
 testable without import cycles.
 
+Modules 10 and 12 lead directly into the scheduler, HTTP prober, API, client
+timeouts, and graceful shutdown work here. Module 11's repository lesson informs
+the narrow `HistoryStore` boundary, while this capstone deliberately keeps its
+bounded history in memory.
+
 ## Commands
 
 Compile the starter:

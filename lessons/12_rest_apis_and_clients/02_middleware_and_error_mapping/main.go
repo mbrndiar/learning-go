@@ -7,8 +7,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
+	"net/http/httptest"
 )
 
 var (
@@ -58,5 +58,8 @@ func item(w http.ResponseWriter, r *http.Request) error {
 
 func main() {
 	handler := withRequestID(adapt(item))
-	log.Fatal(http.ListenAndServe(":8080", handler))
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/?id=42", nil)
+	handler.ServeHTTP(recorder, request)
+	fmt.Printf("status=%d request_id=%s body=%s", recorder.Code, recorder.Header().Get("X-Request-ID"), recorder.Body.String())
 }

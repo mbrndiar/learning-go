@@ -7,7 +7,7 @@ security patch in each supported release line.
 
 ## Why `go test ./...` fails in a learner checkout
 
-The eleven packages directly under `exercises/` are learner starters. Their
+The twelve packages directly under `exercises/` are learner starters. Their
 tests describe the work and intentionally fail while the TODO implementations
 remain. Therefore a raw:
 
@@ -87,9 +87,11 @@ COMPARATIVE_KV_PROGRAM="$PWD/capstones/comparative/.conformance/race/kvstore" \
 rm -rf capstones/comparative/.conformance/race
 
 go test -race ./lessons/10_concurrency/...
-go test -race ./lessons/11_application_integration/...
+go test -race ./lessons/11_sql_and_sqlite/...
+go test -race ./lessons/12_rest_apis_and_clients/...
 go test -race ./exercises/10_concurrency/solution
-go test -race ./exercises/11_application_integration/solution
+go test -race ./exercises/11_sql_and_sqlite/solution
+go test -race ./exercises/12_rest_apis_and_clients/solution
 ```
 
 It does not use `go test -race ./...`, because that would run the intentionally

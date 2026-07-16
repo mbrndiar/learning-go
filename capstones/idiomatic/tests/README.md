@@ -14,6 +14,9 @@ and a race-safe scripted loopback handler. Tests use `httptest`, temporary
 directories, injected clocks, channels, and contexts; they require no public
 network access.
 
+The scheduler checks build on Module 10; the HTTP classification, handler,
+client cleanup, JSON, and shutdown checks extend Module 12.
+
 Run one milestone package or the complete solution:
 
 ```bash

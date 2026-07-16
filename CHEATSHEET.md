@@ -144,6 +144,20 @@ case <-ctx.Done():
 Only the sender closes a channel. Every goroutine should have a clear owner and
 termination path.
 
+## SQL and SQLite
+
+```go
+row := db.QueryRowContext(ctx,
+    "SELECT id, title FROM tasks WHERE id = ?", id)
+if err := row.Scan(&task.ID, &task.Title); err != nil {
+    return fmt.Errorf("find task: %w", err)
+}
+```
+
+Pass values as query arguments, close multi-row results, check `rows.Err()`,
+and `defer tx.Rollback()` immediately after `BeginTx`. SQLite `PRAGMA` settings
+and `:memory:` connection behavior are database-specific.
+
 ## HTTP and JSON
 
 ```go

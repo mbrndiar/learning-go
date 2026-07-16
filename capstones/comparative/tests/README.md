@@ -5,6 +5,9 @@ setup/assertion support, process barrier, lock helper, timeout handling, and
 cleanup checks. `m1` through `m5` expose the frozen learner milestones without
 copying assertions into an implementation tree.
 
+These checks extend Module 11 from focused temporary databases to a versioned
+SQLite file, migration rules, transaction races, and independent verification.
+
 The solution adapter runs:
 
 1. domain keys, expectations, restricted JSON, and typed errors;

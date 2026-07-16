@@ -43,7 +43,9 @@ GOTOOLCHAIN=go1.26.5 go version
 
 ## 4. Download module dependencies
 
-Most lessons use only the standard library. Download the capstone dependency:
+Most lessons use only the standard library. Module 11 and the comparative
+capstone use SQLite; Module 12 uses Chi, Gin, and Resty. Download all pinned
+dependencies:
 
 ```bash
 go mod download

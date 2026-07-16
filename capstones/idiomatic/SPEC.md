@@ -40,7 +40,8 @@ State is derived from probes; it is not task CRUD or a generic SQLite KV API.
 | [Module 8: testing](../../lessons/08_testing/README.md) | Write table tests, helpers/cleanup, `httptest`, examples, fuzz seeds, and coverage checks. |
 | [Module 9: tooling, CLI, observability](../../lessons/09_tooling_cli_observability/README.md) | Use standard flags, `slog`, race detection, vet, staticcheck, and profiling-aware design. |
 | [Module 10: concurrency](../../lessons/10_concurrency/README.md) | Own goroutines, bounded work, channels, `select`, timers, contexts, cancellation, joins, and race safety. |
-| [Module 11: application integration](../../lessons/11_application_integration/README.md) | Use client timeouts, HTTP handlers/middleware, JSON contracts, and graceful server shutdown. |
+| [Module 11: SQL and SQLite](../../lessons/11_sql_and_sqlite/README.md) | Define a narrow history boundary and make the capstone's bounded in-memory persistence choice explicit. |
+| [Module 12: REST APIs and clients](../../lessons/12_rest_apis_and_clients/README.md) | Use client timeouts, HTTP handlers/middleware, JSON contracts, and graceful server shutdown. |
 
 ## Configuration contract
 

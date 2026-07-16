@@ -3,6 +3,8 @@
 The normative language-neutral contract is frozen under [`spec/`](spec/).
 Read [`spec/SPEC.md`](spec/SPEC.md) and
 [`spec/SCENARIOS.md`](spec/SCENARIOS.md) before implementing a milestone.
+Module 11's relational model, parameterized SQL, transactions, SQLite details,
+and repository boundary are the direct preparation for this capstone.
 
 ## Go layout
 

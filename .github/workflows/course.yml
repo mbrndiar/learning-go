@@ -107,9 +107,11 @@ jobs:
           rm -rf "$race_directory"
           trap - EXIT
           go test -race ./lessons/10_concurrency/...
-          go test -race ./lessons/11_application_integration/...
+          go test -race ./lessons/11_sql_and_sqlite/...
+          go test -race ./lessons/12_rest_apis_and_clients/...
           go test -race ./exercises/10_concurrency/solution
-          go test -race ./exercises/11_application_integration/solution
+          go test -race ./exercises/11_sql_and_sqlite/solution
+          go test -race ./exercises/12_rest_apis_and_clients/solution
 
       - name: Enforce coverage thresholds
         if: matrix.go-version == '1.26.x'

@@ -72,9 +72,9 @@ compile" check across a whole module - exactly what CI normally runs first.
   (`go 1.25.0` at the root of this course) plus any dependencies.
 - `go mod tidy` adds missing requirements and removes unused ones so
   `go.mod`/`go.sum` match what the code actually imports.
-- This course's lessons use only the standard library, so `go.mod` needs no
-  changes to run them; `go mod tidy` matters once you add a third-party
-  import.
+- Most course lessons use only the standard library. Module 11 imports the
+  pinned SQLite driver, while Module 12 imports pinned Chi, Gin, and Resty
+  releases; `go mod tidy` keeps those requirements synchronized with imports.
 
 > This module's lessons must not touch the repository's root `go.mod` -
 > everything here builds against the standard library.
