@@ -70,6 +70,23 @@ jobs:
             grep '/solution$' |
             xargs -r go test
 
+      - name: Compile capstone starters
+        run: |
+          go test -run '^$' \
+            ./capstones/comparative/starter/... \
+            ./capstones/idiomatic/starter/...
+
+      - name: Run capstone harness and solution tests
+        run: |
+          go test \
+            ./capstones/comparative/starter/kvstore \
+            ./capstones/comparative/solution/... \
+            ./capstones/comparative/tests/... \
+            ./capstones/idiomatic/starter/monitor \
+            ./capstones/idiomatic/solution/... \
+            ./capstones/idiomatic/tests/... \
+            ./capstones
+
       - name: Run project tests
         run: go test ./project/...
 
@@ -106,6 +123,11 @@ jobs:
           {
             go list ./lessons/...
             go list ./exercises/... | grep '/solution$'
+            go list ./capstones/comparative/solution/...
+            go list ./capstones/comparative/tests/...
+            go list ./capstones/idiomatic/solution/...
+            go list ./capstones/idiomatic/tests/...
+            go list ./capstones/testsupport
             go list ./project/...
             go list ./tools/...
           } | xargs "$(go env GOPATH)/bin/staticcheck"

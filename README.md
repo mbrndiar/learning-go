@@ -64,9 +64,22 @@ Every module has a matching folder under
 [`exercises/`](exercises/README.md). Starter packages contain TODOs and tests;
 reference implementations live in separate `solution` packages.
 
-## 🏆 Capstone project
+## 🏆 Capstone projects
 
-The connected [Task projects](project/README.md) combine the course:
+The course now provides two staged capstones under
+[`capstones/`](capstones/README.md):
+
+- a shared versioned SQLite key/value store for comparing implementations
+  across learning repositories; and
+- an idiomatic Go service health monitor built around interfaces, contexts,
+  goroutines, and `net/http`.
+
+Both have matching starter/solution package boundaries and reusable contract
+test support. The initial harnesses compile and report explicit unfinished
+behavior; implement them milestone by milestone from their specifications.
+
+The connected [Task projects](project/README.md) remain available as completed
+integration examples:
 
 ```text
 Task Manager CLI -> Manager -> Storage
@@ -74,8 +87,8 @@ Task Manager CLI -> Manager -> Storage
                              `-> REST client -> REST API -> SQLite
 ```
 
-The implementation is a readable starting point. Extend it through the staged
-exercise list while preserving the shared storage contract.
+They are also a source for shared storage-contract, HTTP, SQLite, and CLI test
+patterns while the new capstones are developed.
 
 ## 🗒️ Cheat sheet
 
