@@ -100,7 +100,7 @@ tools you install separately with `go install`:
 
 ```bash
 go install honnef.co/go/tools/cmd/staticcheck@v0.7.0
-staticcheck ./...
+staticcheck ./path/to/package
 ```
 
 `staticcheck` finds a much larger set of bugs and style issues than
@@ -130,26 +130,27 @@ runs on Go 1.25 and 1.26. A practical local sequence is:
 go mod download
 go mod tidy
 git diff --exit-code -- go.mod go.sum
-go fmt ./...
+test -z "$(gofmt -l .)"
 go vet ./...
 go test ./lessons/...
-go list ./exercises/... | grep -v '/solution$' | xargs go test -run '^$'
-go list ./exercises/... | grep '/solution$' | xargs go test
+go list ./exercises/... | grep -v '/solution$' | xargs -r go test -run '^$'
+go list ./exercises/... | grep '/solution$' | xargs -r go test
+go test -run '^$' ./capstones/comparative/starter/... ./capstones/idiomatic/starter/...
+go test ./capstones/comparative/starter/kvstore \
+  ./capstones/comparative/solution/... ./capstones/comparative/tests/... \
+  ./capstones/idiomatic/starter/monitor \
+  ./capstones/idiomatic/solution/... ./capstones/idiomatic/tests/... ./capstones
 go test ./project/...
-go test -race ./project/... ./lessons/10_concurrency/... ./lessons/11_application_integration/... \
-  ./exercises/10_concurrency/solution ./exercises/11_application_integration/solution
-go test -coverprofile=coverage.out ./project/taskmanager ./project/taskapi ./project/taskclient
-bash scripts/check-coverage.sh coverage.out 85
-{ go list ./lessons/...; go list ./exercises/... | grep '/solution$'; go list ./project/...; go list ./tools/...; } |
-  xargs staticcheck
-govulncheck ./...
 go run ./tools/checklinks
 ```
 
 Starter exercises intentionally fail their behavior tests until completed, so
 CI compiles them with `go test -run '^$'` and runs the separate `solution`
-packages. The workflow also runs a short fuzz smoke test. GitHub Actions uses
-the official [`actions/checkout`](https://github.com/actions/checkout) and
+packages. A raw `go test ./...` therefore reflects learner progress, not the
+clean-checkout CI result. The full race, coverage, fuzz, scoped staticcheck,
+govulncheck, and link recipes—and the reason each scope differs—are in
+[`docs/QUALITY.md`](../../docs/QUALITY.md). GitHub Actions uses the official
+[`actions/checkout`](https://github.com/actions/checkout) and
 [`actions/setup-go`](https://github.com/actions/setup-go) actions.
 
 ### CLI design with `flag` (`01_cli_flags`)

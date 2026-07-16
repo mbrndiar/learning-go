@@ -1,9 +1,15 @@
 # 🗂️ taskmanager
 
 `taskmanager` owns the task **domain model** and coordinates persistence behind
-a small, consumer-owned `Storage` interface. It is the top of the capstone:
+a small, consumer-owned `Storage` interface. It is the top of the retained Task
+pipeline:
 a CLI drives a `Manager`, and the `Manager` delegates to whichever backend the
 user selects — a local JSON file or the remote REST API.
+
+This is a completed legacy reference. Current capstone work lives under
+[`../../capstones/`](../../capstones/README.md); use the
+[old-to-new concept map](../README.md#-old-to-new-concept-map) when reusing its
+patterns.
 
 ## 🧭 Architecture
 

@@ -5,6 +5,11 @@ standalone CLI. It hides transport concerns — base-URL resolution, finite
 timeouts, JSON encoding/decoding, response validation, and error translation —
 so callers work with Go values and sentinel errors instead of raw responses.
 
+This is a completed legacy reference. Current capstone work lives under
+[`../../capstones/`](../../capstones/README.md); use the
+[old-to-new concept map](../README.md#-old-to-new-concept-map) when reusing its
+HTTP-client patterns.
+
 ## 🧭 Architecture
 
 ```text

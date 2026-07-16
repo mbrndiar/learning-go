@@ -1,8 +1,13 @@
 # 🌐 taskapi
 
-`taskapi` is the remote end of the capstone. It persists tasks in **SQLite**
-through `database/sql` and exposes them as **JSON over HTTP** with a small,
-framework-free `net/http` server.
+`taskapi` is the remote end of the retained Task pipeline. It persists tasks in
+**SQLite** through `database/sql` and exposes them as **JSON over HTTP** with a
+small, framework-free `net/http` server.
+
+This is a completed legacy reference. Current capstone work lives under
+[`../../capstones/`](../../capstones/README.md); use the
+[old-to-new concept map](../README.md#-old-to-new-concept-map) when reusing its
+HTTP and SQLite patterns.
 
 ## 🧭 Architecture
 

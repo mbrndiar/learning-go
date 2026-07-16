@@ -19,8 +19,8 @@ tests/contract/        reusable target-independent harness assertions
 The two implementation trees expose the same Go API. Keep domain types free of
 SQLite details, define storage behavior through the small `storage.Store`
 interface, and keep `main` free of parsing or persistence logic. This prevents
-import cycles and lets future milestone contracts inject a fake opener before
-real SQLite process tests are introduced.
+import cycles, lets milestone contracts inject a fake opener, and still leaves
+the real SQLite/process boundary available to the conformance tests.
 
 ## Commands
 

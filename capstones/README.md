@@ -12,6 +12,12 @@ boundaries intentionally match so shared contract helpers and milestone tests
 can target either implementation without changing behavior. Both solutions are
 complete; both starters remain explicit guided TODOs.
 
+These are the current course capstones. The earlier connected Task code remains
+under [`project/`](../project/README.md) as a completed migration/reference
+surface; use its
+[old-to-new concept map](../project/README.md#-old-to-new-concept-map) rather
+than adding new capstone work there.
+
 ## Targeted workflow
 
 Compile every starter package without running learner tests:
@@ -46,6 +52,9 @@ go test \
 The starter compile command remains useful after milestone tests are added:
 starter tests may intentionally fail while unfinished, but every starter
 package must always load and type-check.
+
+For the repository-wide CI split—and why raw `go test ./...` intentionally runs
+failing exercise starters—see [`docs/QUALITY.md`](../docs/QUALITY.md).
 
 ## Harness rules
 

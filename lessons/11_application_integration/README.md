@@ -192,7 +192,9 @@ go test -race ./lessons/11_application_integration/...
 
 ## 🏁 Checkpoint
 
-Build or extend the connected [Task projects](../../project/README.md):
-wire method-aware routes, a strict JSON boundary, at least one middleware,
-an outbound HTTP client call with a bounded context, a `TaskStore`-shaped
-persistence layer, and a graceful shutdown path, into one runnable service.
+Begin the [idiomatic health-monitor capstone](../../capstones/idiomatic/README.md):
+wire method-aware routes, a strict JSON boundary, an outbound HTTP probe with a
+bounded context, an interface-backed history layer, and graceful shutdown into
+one runnable service. Use the retained Task projects'
+[old-to-new concept map](../../project/README.md#-old-to-new-concept-map) to
+identify reusable patterns without copying the Task CRUD model.

@@ -160,9 +160,9 @@ Always use finite client/server timeouts and validate decoded data.
 
 ```bash
 go run ./path/to/package
-go test ./...
-go test -race ./...
-go test -coverprofile=coverage.out ./...
+go test ./path/to/package
+go test -race ./path/to/package
+go test -coverprofile=coverage.out ./path/to/package
 go tool cover -func=coverage.out
 go vet ./...
 gofmt -w .
@@ -170,10 +170,10 @@ go mod tidy
 go doc package.Symbol
 ```
 
-At this repository root, `go test ./...` intentionally fails until every starter
-exercise is implemented. The course CI instead compiles starters without running
-their tests and runs all reference solutions; see
-[`exercises/README.md`](exercises/README.md).
+At this repository root, `go test ./...` intentionally fails until every
+exercise starter is implemented. CI instead compiles starters without running
+their behavior tests and tests the completed course surfaces; see
+[`docs/QUALITY.md`](docs/QUALITY.md).
 
 ## Further reading
 

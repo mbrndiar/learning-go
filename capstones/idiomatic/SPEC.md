@@ -8,8 +8,10 @@ probe classification, commands, HTTP responses, lifecycle behavior, and
 acceptance criteria are normative. Package decomposition and concrete
 goroutine/channel design are not, provided ownership and shutdown are explicit.
 
+Both capstone solutions are complete and included in the course quality gates.
 The connected Task projects under [`project/`](../../project/README.md) remain
-available until both new capstones pass all Go quality gates.
+available as completed migration/reference examples, not as unfinished
+replacements.
 
 ## Bounded problem
 
@@ -368,9 +370,9 @@ loopback listeners, or elapsed-time performance assertions are permitted.
 - Module language version: Go `1.25.0`.
 - CI/runtime matrix: Go `1.25.x` and `1.26.x`.
 - Capstone runtime/test dependencies: Go standard library only.
-- Existing `modernc.org/sqlite v1.53.0` remains pinned for the old project and
-  comparative capstone but is rejected for this capstone; history is bounded
-  in memory to avoid a second database project.
+- Existing `modernc.org/sqlite v1.53.0` remains pinned for the retained Task
+  projects and comparative capstone but is rejected for this capstone; history
+  is bounded in memory to avoid a second database project.
 - Existing tool pins used by CI remain `staticcheck@v0.7.0` and
   `govulncheck@v1.6.0`.
 - Rejected: routers, schedulers, retry libraries, assertion suites, goroutine
@@ -405,7 +407,8 @@ Final repository validation must include the capstone in:
 ```bash
 gofmt -l .
 go vet ./...
-go test ./...
+go test ./capstones/idiomatic/solution/monitor/... \
+  ./capstones/idiomatic/tests/...
 go test -race ./capstones/idiomatic/solution/monitor/... \
   ./capstones/idiomatic/tests/...
 go test -coverprofile=coverage.out \
@@ -414,7 +417,10 @@ bash scripts/check-coverage.sh coverage.out 85
 go run ./tools/checklinks
 ```
 
-CI also runs the pinned staticcheck and govulncheck commands described above.
+Raw `go test ./...` is not the clean-checkout gate because it runs unfinished
+exercise starter tests. CI also compiles both capstone starters, runs their
+harnesses, and runs the pinned staticcheck and govulncheck commands described in
+[`docs/QUALITY.md`](../../docs/QUALITY.md).
 
 ## Migration and reuse guidance
 
@@ -430,6 +436,8 @@ Reuse/refactor:
 - worker ownership, channel closing, cancellation, and race-test patterns from
   the concurrency lessons/exercises.
 
-Do not migrate Task validation, CRUD, storage, REST resource routes, or SQLite
-schema. The old project is preserved until a later cleanup after both capstones
-are proven.
+Do not migrate Task validation, CRUD, storage, REST resource routes, or the Task
+SQLite schema. The old project remains preserved as a completed comparison
+surface; no deletion is part of this capstone migration. The durable
+path-by-path mapping is in the
+[`project/` old-to-new concept map](../../project/README.md#-old-to-new-concept-map).

@@ -23,7 +23,7 @@ By the end of the course, you will be able to:
 
 ## ✅ Requirements
 
-- Go 1.25 or newer
+- The latest patch release of Go 1.25 or newer
 - Git for cloning the repository
 - The lessons themselves use the standard library. The capstone additionally
   uses a pinned pure-Go SQLite driver.
@@ -38,6 +38,14 @@ Each runnable lesson is its own Go package. From the repository root:
 ```bash
 go run ./lessons/01_basics/01_hello_world
 ```
+
+For an unchanged learner checkout, a raw `go test ./...` is intentionally not
+the repository health check: it runs the unfinished exercise starter tests and
+fails until those exercises are implemented. CI instead compiles starter
+packages without running their behavior tests, then tests lessons, reference
+solutions, capstone harnesses/solutions, and the retained Task projects. See
+[`docs/QUALITY.md`](docs/QUALITY.md) for the exact test, race, coverage, fuzz,
+static-analysis, vulnerability, and link-check commands.
 
 For each module:
 
@@ -79,7 +87,7 @@ test support. Each includes a complete reference solution and guided
 five-milestone starter; unfinished starter behavior remains explicit.
 
 The connected [Task projects](project/README.md) remain available as completed
-integration examples:
+legacy integration examples:
 
 ```text
 Task Manager CLI -> Manager -> Storage
@@ -87,8 +95,9 @@ Task Manager CLI -> Manager -> Storage
                              `-> REST client -> REST API -> SQLite
 ```
 
-They are also a source for shared storage-contract, HTTP, SQLite, and CLI test
-patterns while the new capstones are developed.
+Use their [old-to-new concept map](project/README.md#-old-to-new-concept-map)
+when moving from the Task code to the current capstones. The old code remains
+available for comparison, but new capstone work belongs under `capstones/`.
 
 ## 🗒️ Cheat sheet
 

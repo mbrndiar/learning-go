@@ -2,8 +2,11 @@
 
 Supplementary course documentation:
 
-- [`SETUP.md`](SETUP.md) — installing Go 1.25+, configuring an editor,
-  understanding toolchain selection, and troubleshooting common setup issues.
+- [`SETUP.md`](SETUP.md) — installing a current Go 1.25+ patch, configuring an
+  editor, understanding toolchain selection, and troubleshooting common setup
+  issues.
+- [`QUALITY.md`](QUALITY.md) — the intentional starter-test behavior and the
+  exact CI test, race, coverage, fuzz, analysis, vulnerability, and link gates.
 
 Core teaching material lives in the module READMEs under
 [`lessons/`](../lessons/README.md).

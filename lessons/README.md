@@ -39,4 +39,6 @@ zero-value behavior, error paths, and why a design is race safe.
 - After modules 5-6: model and persist a collection of structs.
 - After modules 7-9: package, test, benchmark, and instrument a CLI.
 - After module 10: implement a bounded worker pool with cancellation.
-- After module 11: build or extend the connected Task projects.
+- After module 11: begin the idiomatic capstone, using the retained Task
+  projects' [old-to-new concept map](../project/README.md#-old-to-new-concept-map)
+  to recognize the HTTP, interface, and testing patterns.

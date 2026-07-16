@@ -2,14 +2,17 @@
 
 ## 1. Install Go
 
-Install Go 1.25 or newer from <https://go.dev/dl/> and verify it:
+Install the latest patch release of Go 1.25 or newer from
+<https://go.dev/dl/> and verify it:
 
 ```bash
 go version
 ```
 
 As of July 2026, Go 1.26 is current and Go 1.25 is the previous supported major
-release. This course declares Go 1.25 as its minimum.
+release. This course declares Go 1.25 as its language minimum, but security and
+vulnerability checks require a current patch release, not the original
+`go1.25.0` toolchain.
 
 ## 2. Get the code
 
@@ -69,17 +72,21 @@ go run ./lessons/01_basics/01_hello_world
 ```bash
 go run ./path/to/package
 go test ./path/to/package
-go test -race ./...
+go test -race ./path/to/package
+go test -coverprofile=coverage.out ./path/to/package
+go tool cover -func=coverage.out
 go vet ./...
-go fmt ./...
+gofmt -w .
 go mod tidy
 go doc package.Symbol
 ```
 
-At the course root, `go test ./...` also runs intentionally incomplete starter
-exercises, so failures there are expected. Follow the workflow in
-[`exercises/README.md`](../exercises/README.md) to compile starters or run
-reference solutions separately.
+At the course root, `go test ./...` runs all intentionally incomplete exercise
+starter tests, so a clean learner checkout is expected to fail that raw command.
+This is deliberate, not a CI exception being ignored. The course workflow
+compiles starters without running their tests and separately tests every
+completed lesson, solution, capstone harness, and retained Task package. Use
+[`QUALITY.md`](QUALITY.md) for the exact CI-defined commands and tool pins.
 
 ## Troubleshooting
 

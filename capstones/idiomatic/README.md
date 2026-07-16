@@ -24,8 +24,8 @@ tests/m1 ... tests/m5  shared progressive contract assertions
 Dependencies point inward: `domain` imports no monitor package; `probe` and
 `history` depend only on `domain`; `scheduler` composes those interfaces; `api`
 depends on `domain` and `history`; and `cli` is the outer application boundary.
-The command imports `cli`. This arrangement keeps future concurrency and HTTP
-work testable without import cycles.
+The command imports `cli`. This arrangement keeps concurrency and HTTP behavior
+testable without import cycles.
 
 ## Commands
 

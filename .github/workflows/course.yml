@@ -59,6 +59,8 @@ jobs:
           )
 
       - name: Compile exercise starters
+        # Do not replace the defined test split with `go test ./...`: learner
+        # starter behavior tests intentionally fail until exercises are solved.
         run: |
           go list ./exercises/... |
             grep -v '/solution$' |
@@ -113,7 +115,7 @@ jobs:
           go test -race ./exercises/10_concurrency/solution
           go test -race ./exercises/11_application_integration/solution
 
-      - name: Measure project coverage
+      - name: Enforce coverage thresholds
         if: matrix.go-version == '1.26.x'
         run: |
           go test -coverprofile=coverage.out \
