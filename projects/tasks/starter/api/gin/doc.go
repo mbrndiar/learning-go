@@ -1,2 +1,2 @@
-// Package gin will expose the Task contract through the Gin framework.
+// Package gin provides the incomplete Gin adapter exercise boundary.
 package gin

@@ -148,3 +148,14 @@ func TestBothRepositoriesThroughNetHTTP(t *testing.T) {
 		})
 	}
 }
+
+func TestAllServerSelectorsValidate(t *testing.T) {
+	for _, name := range []string{"nethttp", "chi", "gin"} {
+		config := server.DefaultConfig()
+		config.Server = name
+		validated, err := config.Validate()
+		if err != nil || validated.Server != name {
+			t.Fatalf("server %q validation = %#v, %v", name, validated, err)
+		}
+	}
+}

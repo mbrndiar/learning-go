@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 	"path"
+	"runtime/debug"
 
 	"github.com/mbrndiar/learning-go/projects/tasks/solution/api"
 )
@@ -38,11 +39,24 @@ func New(service api.Service, logger *slog.Logger) http.Handler {
 }
 
 func (h *Handler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	state := &responseState{ResponseWriter: writer}
+	defer func() {
+		if recovered := recover(); recovered != nil {
+			h.logger.Error("task HTTP handler panicked",
+				"panic", recovered,
+				"stack", string(debug.Stack()),
+			)
+			if !state.written {
+				clearHeaders(state.Header())
+				api.WriteError(state, nil)
+			}
+		}
+	}()
 	if request.URL.Path != "/" && path.Clean(request.URL.Path) != request.URL.Path {
-		api.WriteError(writer, api.RouteNotFound())
+		api.WriteError(state, api.RouteNotFound())
 		return
 	}
-	h.mux.ServeHTTP(writer, request)
+	h.mux.ServeHTTP(state, request)
 }
 
 func (h *Handler) health(writer http.ResponseWriter, request *http.Request) {
@@ -139,5 +153,26 @@ func methodFallback(allow string) http.HandlerFunc {
 	return func(writer http.ResponseWriter, _ *http.Request) {
 		writer.Header().Set("Allow", allow)
 		api.WriteError(writer, api.MethodNotAllowed(allow))
+	}
+}
+
+type responseState struct {
+	http.ResponseWriter
+	written bool
+}
+
+func (writer *responseState) WriteHeader(status int) {
+	writer.written = true
+	writer.ResponseWriter.WriteHeader(status)
+}
+
+func (writer *responseState) Write(content []byte) (int, error) {
+	writer.written = true
+	return writer.ResponseWriter.Write(content)
+}
+
+func clearHeaders(headers http.Header) {
+	for name := range headers {
+		headers.Del(name)
 	}
 }

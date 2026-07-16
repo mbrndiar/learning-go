@@ -3,6 +3,7 @@ package chi
 import (
 	"log/slog"
 	"net/http"
+	"runtime/debug"
 
 	chilib "github.com/go-chi/chi/v5"
 	"github.com/mbrndiar/learning-go/projects/tasks/solution/api"
@@ -19,6 +20,7 @@ func New(service api.Service, logger *slog.Logger) http.Handler {
 		logger = slog.Default()
 	}
 	handler := &Handler{service: service, logger: logger, router: chilib.NewRouter()}
+	handler.router.Use(recovery(logger))
 	handler.router.Get("/health", handler.health)
 	handler.router.Get("/tasks", handler.list)
 	handler.router.Post("/tasks", handler.create)
@@ -138,5 +140,47 @@ func allowedMethods(path string) string {
 		return "GET, POST"
 	default:
 		return "GET, PATCH, DELETE"
+	}
+}
+
+func recovery(logger *slog.Logger) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+			state := &responseState{ResponseWriter: writer}
+			defer func() {
+				if recovered := recover(); recovered != nil {
+					logger.Error("task HTTP handler panicked",
+						"panic", recovered,
+						"stack", string(debug.Stack()),
+					)
+					if !state.written {
+						clearHeaders(state.Header())
+						api.WriteError(state, nil)
+					}
+				}
+			}()
+			next.ServeHTTP(state, request)
+		})
+	}
+}
+
+type responseState struct {
+	http.ResponseWriter
+	written bool
+}
+
+func (writer *responseState) WriteHeader(status int) {
+	writer.written = true
+	writer.ResponseWriter.WriteHeader(status)
+}
+
+func (writer *responseState) Write(content []byte) (int, error) {
+	writer.written = true
+	return writer.ResponseWriter.Write(content)
+}
+
+func clearHeaders(headers http.Header) {
+	for name := range headers {
+		headers.Del(name)
 	}
 }

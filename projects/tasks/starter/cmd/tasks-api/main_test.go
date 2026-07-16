@@ -21,4 +21,10 @@ func TestStarterServerParsesWithoutCreatingStorage(t *testing.T) {
 	if _, err := os.Stat(path); !os.IsNotExist(err) {
 		t.Fatalf("storage was created by chi placeholder: %v", err)
 	}
+	if exit := run([]string{"--server", "gin", "--backend", "sqlite", "--data", path}); exit != 1 {
+		t.Fatalf("gin exit = %d", exit)
+	}
+	if _, err := os.Stat(path); !os.IsNotExist(err) {
+		t.Fatalf("storage was created by gin placeholder: %v", err)
+	}
 }

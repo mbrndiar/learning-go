@@ -33,7 +33,7 @@ func run(args []string) int {
 	if len(flags.Args()) != 0 {
 		return 2
 	}
-	if config.Server != "nethttp" && config.Server != "chi" {
+	if config.Server != "nethttp" && config.Server != "chi" && config.Server != "gin" {
 		fmt.Fprintf(os.Stderr, "task server: invalid configuration: server %q is not implemented\n", config.Server)
 		return 2
 	}

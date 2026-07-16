@@ -16,11 +16,11 @@ import (
 	"github.com/mbrndiar/learning-go/projects/tasks/solution/api/nethttp"
 	"github.com/mbrndiar/learning-go/projects/tasks/solution/task"
 	"github.com/mbrndiar/learning-go/projects/tasks/tests/m3"
-	"github.com/mbrndiar/learning-go/projects/tasks/tests/m4"
+	"github.com/mbrndiar/learning-go/projects/tasks/tests/m5"
 )
 
-func TestMilestone4HTTPContract(t *testing.T) {
-	m4.AssertServerContract(t, func(service api.Service, logger *slog.Logger) http.Handler {
+func TestMilestone5HTTPContract(t *testing.T) {
+	m5.AssertServerContract(t, func(service api.Service, logger *slog.Logger) http.Handler {
 		return nethttp.New(service, logger)
 	})
 }

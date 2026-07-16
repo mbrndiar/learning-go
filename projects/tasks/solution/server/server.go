@@ -13,6 +13,7 @@ import (
 	"time"
 
 	apichi "github.com/mbrndiar/learning-go/projects/tasks/solution/api/chi"
+	apigin "github.com/mbrndiar/learning-go/projects/tasks/solution/api/gin"
 	apinethttp "github.com/mbrndiar/learning-go/projects/tasks/solution/api/nethttp"
 	"github.com/mbrndiar/learning-go/projects/tasks/solution/storage/markdown"
 	"github.com/mbrndiar/learning-go/projects/tasks/solution/storage/sqlite"
@@ -52,7 +53,7 @@ func (config Config) Validate() (Config, error) {
 	if config.Server == "" {
 		config.Server = "nethttp"
 	}
-	if config.Server != "nethttp" && config.Server != "chi" {
+	if config.Server != "nethttp" && config.Server != "chi" && config.Server != "gin" {
 		return Config{}, fmt.Errorf("%w: server %q is not implemented", ErrInvalidConfig, config.Server)
 	}
 	if config.Backend != "sqlite" && config.Backend != "markdown" {
@@ -208,6 +209,8 @@ func Run(ctx context.Context, config Config, logger *slog.Logger) error {
 		handler = apinethttp.New(service, logger)
 	case "chi":
 		handler = apichi.New(service, logger)
+	case "gin":
+		handler = apigin.New(service, logger)
 	}
 	active, err := New(validated, handler)
 	if err != nil {
