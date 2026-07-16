@@ -167,6 +167,8 @@ func NormalizeBaseURL(raw string) (string, error) {
 		parsed.User != nil || parsed.RawQuery != "" || parsed.Fragment != "" {
 		return "", &ConfigError{Field: "base-url", Message: "base URL must be an absolute HTTP URL"}
 	}
+	parsed.Scheme = strings.ToLower(parsed.Scheme)
+	parsed.Host = strings.ToLower(parsed.Host)
 	parsed.Path = strings.TrimRight(parsed.Path, "/")
 	parsed.RawPath = ""
 	return parsed.String(), nil
