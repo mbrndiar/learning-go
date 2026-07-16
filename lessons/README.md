@@ -1,6 +1,6 @@
 # 🎓 Lessons
 
-Eleven modules teach Go through small packages that compile and run
+Twelve modules teach Go through small packages that compile and run
 independently.
 
 ## 🗂️ Modules
@@ -17,6 +17,8 @@ independently.
 10. [`10_concurrency/`](10_concurrency/)
 11. [`11_sql_and_sqlite/`](11_sql_and_sqlite/) — relational modeling,
     parameterized SQL, transactions, and repositories with SQLite.
+12. [`12_rest_apis_and_clients/`](12_rest_apis_and_clients/) — strict HTTP
+    boundaries, middleware, clients, framework comparison, and shutdown.
 
 ## ▶️ How to use a module
 
@@ -42,3 +44,5 @@ zero-value behavior, error paths, and why a design is race safe.
 - After module 10: implement a bounded worker pool with cancellation.
 - After module 11: design a relational schema and implement a tested
   `database/sql` repository with one atomic multi-step operation.
+- After module 12: expose one repository operation through a strict JSON
+  boundary and call one upstream service with cancellation and cleanup.

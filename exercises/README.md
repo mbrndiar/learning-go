@@ -31,6 +31,7 @@ packages without running their tests and runs every solution package.
 9. [`09_tooling_cli_observability/`](09_tooling_cli_observability/)
 10. [`10_concurrency/`](10_concurrency/)
 11. [`11_sql_and_sqlite/`](11_sql_and_sqlite/)
+12. [`12_rest_apis_and_clients/`](12_rest_apis_and_clients/)
 
 ## 🧩 Problem-solving process
 
