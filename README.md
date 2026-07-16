@@ -72,6 +72,14 @@ Every module has a matching folder under
 [`exercises/`](exercises/README.md). Starter packages contain TODOs and tests;
 reference implementations live in separate `solution` packages.
 
+## 🧩 Required applied project
+
+After Module 12, complete the required
+[`Task REST API and clients`](projects/tasks/README.md) project before beginning
+the final capstones. It applies the course's domain, persistence, HTTP, client,
+CLI, and testing material to one portable contract while comparing three Go
+server stacks and two Go client stacks.
+
 ## 🏆 Capstone projects
 
 The course now provides two staged capstones under
@@ -92,8 +100,9 @@ The superseded connected Task Manager, client, and API were removed after the
 current capstones became canonical. For comparison or migration study, their
 last pre-removal snapshot is commit
 [`b3211f9`](https://github.com/mbrndiar/learning-go/tree/b3211f99fc2ce5da54b88c59da3f12aacbed30ff/project)
-at path `project/`. Treat that immutable snapshot as historical guidance; new
-capstone work belongs under `capstones/`.
+at path `project/`. Treat that immutable snapshot as historical guidance. New
+Task REST API work belongs under [`projects/tasks/`](projects/tasks/README.md);
+new capstone work belongs under `capstones/`.
 
 ## 🗒️ Cheat sheet
 
