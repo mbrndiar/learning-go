@@ -62,8 +62,9 @@ operations deliberately, not through broken wiring.
 
 1. Read the target repository's guides, build configuration, existing projects,
    and current uncommitted changes.
-2. Place the project after learners know basic SQL/SQLite and HTTP/JSON, but
-   before advanced concurrency or final capstones.
+2. Place the project after learners know basic SQL/SQLite and HTTP/JSON plus any
+   concurrency or resource-lifecycle foundations required by the selected
+   ecosystem, but before final capstones.
 3. Copy or adapt the human-readable specification and OpenAPI contract without
    changing the Task, persistence, status, error, or CLI behavior.
 4. Write a learner README with prerequisites, architecture, milestones, exact

@@ -158,9 +158,9 @@ values, and every connection is closed. Deleting rows—including every row—do
 not reset future IDs.
 
 This project does not require migrations, write-ahead logging configuration,
-cross-process compare-and-set behavior, an ORM, or database pooling. An
-unexpected schema or database failure is reported as a storage error rather
-than being "fixed" by dropping user data.
+cross-process compare-and-set behavior, an ORM, or advanced connection-pool
+tuning. An unexpected schema or database failure is reported as a storage error
+rather than being "fixed" by dropping user data.
 
 ### Markdown checklist repository
 
@@ -417,8 +417,8 @@ The project is complete when:
 
 - both repositories pass one shared create/list/get/update/delete contract,
   including persistence restart and corruption cases;
-- all three servers pass the same black-box HTTP contract;
-- all three clients pass the same command/transport contract;
+- all selected servers pass the same black-box HTTP contract;
+- all selected clients pass the same command/transport contract;
 - a small interoperability matrix proves every client can call every server;
 - IDs remain monotonic after deletion for both repositories;
 - Markdown saves are deterministic and atomically published;
@@ -440,7 +440,8 @@ This project does not include:
 - pagination, sorting options, search, bulk operations, or background jobs;
 - browser UI, CORS policy, WebSockets, streaming, or asynchronous endpoints;
 - public deployment, TLS termination, containers, or production server tuning;
-- ORM use, schema migrations, database pooling, or distributed transactions;
+- ORM use, schema migrations, advanced connection-pool tuning, or distributed
+  transactions;
 - cross-process Markdown locking or synchronization between backends;
 - automatic retries, offline client caching, or generated client SDKs; or
 - checksum manifests and exhaustive cross-language fixture machinery.

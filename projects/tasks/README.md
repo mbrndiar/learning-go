@@ -127,7 +127,10 @@ Do not hide these differences behind a home-grown universal framework.
 Servers bind to loopback for local learning and tests use ephemeral ports,
 finite timeouts, temporary storage, and no public network. This project does not
 provide production deployment guidance, authentication, authorization, TLS
-termination, containers, migrations, ORM use, database pooling, distributed
-transactions, cross-process Markdown locking, retries, generated SDKs, or
-operational hardening. The complete non-goals are in
+termination, containers, migrations, ORM use, distributed transactions,
+cross-process Markdown locking, retries, generated SDKs, or operational
+hardening. The SQLite adapter owns one process-scoped `*sql.DB`; its built-in
+pool is deliberately configured for this local workload, while advanced pool
+tuning, capacity planning, and production scaling remain out of scope. The
+complete non-goals are in
 [`docs/SPEC.md`](docs/SPEC.md#explicit-non-goals).

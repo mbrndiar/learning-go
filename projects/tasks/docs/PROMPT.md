@@ -37,9 +37,10 @@ meaningful clients defined by **Contract source path** and **OpenAPI source
 path**.
 
 Use shared `starter` and `solution` source roots plus shared progressive tests.
-The project belongs after learners know SQL/SQLite and HTTP/JSON and before
-advanced concurrency or final capstones. Do not replace, rename, or simplify
-existing final projects.
+The project belongs after learners know SQL/SQLite and HTTP/JSON plus any
+concurrency or resource-lifecycle foundations required by the target ecosystem,
+and before final capstones. Do not replace, rename, or simplify existing final
+projects.
 
 Before editing:
 
