@@ -12,15 +12,19 @@ boundaries intentionally match so shared contract helpers and milestone tests
 can target either implementation without changing behavior. Both solutions are
 complete; both starters remain explicit guided TODOs.
 
-Module 11's SQL and repository work leads into the comparative SQLite capstone.
-Modules 10 and 12 supply the concurrency, HTTP boundary, client, and shutdown
-skills used by the idiomatic monitor.
+Complete the required
+[`Task REST API and clients`](../projects/tasks/README.md) project after Module
+12 and before starting either capstone. Its finished three-server-by-two-client
+solution applies the SQL, repository, HTTP, lifecycle, CLI, and testing
+boundaries used here. Module 11 leads into the comparative SQLite capstone;
+Modules 10 and 12 supply the concurrency, HTTP client, and shutdown skills used
+by the idiomatic monitor.
 
-These are the current course capstones. The earlier connected Task code is
-available only in the last pre-removal snapshot, commit
+These are the current course capstones. A different, superseded connected Task
+codebase is available only in the last pre-removal snapshot, commit
 [`b3211f9`](https://github.com/mbrndiar/learning-go/tree/b3211f99fc2ce5da54b88c59da3f12aacbed30ff/project)
 at path `project/`. Use it as historical migration context rather than adding
-new capstone work there.
+new work there; the current required project lives under `projects/tasks/`.
 
 ## Targeted workflow
 

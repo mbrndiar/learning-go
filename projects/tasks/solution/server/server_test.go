@@ -3,6 +3,7 @@ package server_test
 import (
 	"bytes"
 	"context"
+	"errors"
 	"io"
 	"log/slog"
 	"net"
@@ -159,3 +160,83 @@ func TestAllServerSelectorsValidate(t *testing.T) {
 		}
 	}
 }
+
+func TestRunComposesEveryServerAndBackend(t *testing.T) {
+	directory, err := os.MkdirTemp(".", ".tasks-run-*")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(directory)
+
+	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+	for _, serverName := range []string{"nethttp", "chi", "gin"} {
+		for _, backend := range []string{"sqlite", "markdown"} {
+			t.Run(serverName+"/"+backend, func(t *testing.T) {
+				config := server.DefaultConfig()
+				config.Server = serverName
+				config.Backend = backend
+				config.Port = 0
+				config.Data = filepath.Join(directory, serverName+"."+backend)
+				ctx, cancel := context.WithCancel(context.Background())
+				cancel()
+				if err := server.Run(ctx, config, logger); err != nil {
+					t.Fatal(err)
+				}
+			})
+		}
+	}
+}
+
+func TestConfigAndLifecycleRejectInvalidBoundaries(t *testing.T) {
+	valid := server.DefaultConfig()
+	tests := []struct {
+		name   string
+		mutate func(*server.Config)
+	}{
+		{"server", func(config *server.Config) { config.Server = "fiber" }},
+		{"backend", func(config *server.Config) { config.Backend = "memory" }},
+		{"data", func(config *server.Config) { config.Data = "" }},
+		{"host", func(config *server.Config) { config.Host = "example.com" }},
+		{"negative port", func(config *server.Config) { config.Port = -1 }},
+		{"large port", func(config *server.Config) { config.Port = 65536 }},
+		{"timeout", func(config *server.Config) { config.ShutdownTimeout = 0 }},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			config := valid
+			test.mutate(&config)
+			if _, err := config.Validate(); !errors.Is(err, server.ErrInvalidConfig) {
+				t.Fatalf("Validate() error = %v", err)
+			}
+		})
+	}
+
+	config := valid
+	config.Server = ""
+	validated, err := config.Validate()
+	if err != nil || validated.Server != "nethttp" {
+		t.Fatalf("empty server validation = %#v, %v", validated, err)
+	}
+	if active, err := server.NewWithListener(valid, nil, http.NotFoundHandler()); active != nil ||
+		!errors.Is(err, server.ErrInvalidConfig) {
+		t.Fatalf("nil listener = %#v, %v", active, err)
+	}
+	if active, err := server.NewWithListener(valid, &stubListener{}, nil); active != nil ||
+		!errors.Is(err, server.ErrInvalidConfig) {
+		t.Fatalf("nil handler = %#v, %v", active, err)
+	}
+
+	var inactive *server.Server
+	if inactive.Addr() != nil {
+		t.Fatal("nil server has an address")
+	}
+	if err := inactive.Close(); err != nil {
+		t.Fatalf("nil server Close() = %v", err)
+	}
+}
+
+type stubListener struct{}
+
+func (*stubListener) Accept() (net.Conn, error) { return nil, errors.New("unused") }
+func (*stubListener) Close() error              { return nil }
+func (*stubListener) Addr() net.Addr            { return nil }

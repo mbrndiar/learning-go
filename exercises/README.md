@@ -33,6 +33,10 @@ packages without running their tests and runs every solution package.
 11. [`11_sql_and_sqlite/`](11_sql_and_sqlite/)
 12. [`12_rest_apis_and_clients/`](12_rest_apis_and_clients/)
 
+After all twelve exercise solutions, continue with the required
+[`Task REST API and clients`](../projects/tasks/README.md) project before the
+capstones.
+
 ## 🧩 Problem-solving process
 
 Define inputs, outputs, ownership, zero-value behavior, and errors before

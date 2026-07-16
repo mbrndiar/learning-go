@@ -9,9 +9,10 @@ This required project belongs after Module 12 and before the final
 especially SQL/SQLite, HTTP/JSON, CLI, testing, contexts, and resource cleanup,
 before starting.
 
-Phase 1 provides matching, compileable `starter/` and `solution/` package trees,
-the portable contract, and milestone-test package skeletons. Chi, Gin, and Resty
-imports are intentionally deferred until their implementation milestones.
+The `solution/` tree is complete: all three servers, both clients, both
+repositories, the CLI, OpenAPI checks, and the full interoperability matrix are
+implemented. The matching `starter/` tree stays compileable and deliberately
+incomplete so each milestone can be attempted before reading the solution.
 
 ## Start with the contract
 
@@ -66,35 +67,47 @@ behavior.
 
 Attempt each starter milestone before reading the corresponding solution.
 
-## Intended commands
+## Starter and solution workflow
 
-Run commands from the repository root. During Phase 1 the executable entry
-points intentionally report `task.ErrNotImplemented`; later milestones replace
-those placeholders.
-
-Compile every project package without running future behavior tests:
+Run commands from the repository root. Start by compiling every learner package
+without running milestone behavior:
 
 ```bash
-go test -run '^$' ./projects/tasks/...
+go test -timeout=2m -run '^$' ./projects/tasks/starter/...
 ```
 
-Run the exported-boundary check:
+Then run the starter's no-side-effect harness. It verifies that unfinished
+operations remain explicit and that commands do not create storage:
 
 ```bash
-go test ./projects/tasks -run TestStarterAndSolutionExportedBoundariesMatch
+go test -timeout=2m -count=1 ./projects/tasks/starter/...
+```
+
+After completing a milestone, compare with the reference packages. The complete
+solution command includes domain, repository, server, client, CLI, real-loopback,
+OpenAPI, interoperability, and exported-boundary checks:
+
+```bash
+go test -timeout=3m -count=1 \
+  ./projects/tasks/solution/... \
+  ./projects/tasks/tests/... \
+  ./projects/tasks
 ```
 
 Start a solution server with any adapter and backend:
 
 ```bash
 go run ./projects/tasks/solution/cmd/tasks-api \
-  --server nethttp --backend sqlite --data tasks.db --addr 127.0.0.1:8000
+  --server nethttp --backend sqlite --data tasks.db \
+  --host 127.0.0.1 --port 8000
 
 go run ./projects/tasks/solution/cmd/tasks-api \
-  --server chi --backend markdown --data tasks.md --addr 127.0.0.1:8000
+  --server chi --backend markdown --data tasks.md \
+  --host 127.0.0.1 --port 8000
 
 go run ./projects/tasks/solution/cmd/tasks-api \
-  --server gin --backend sqlite --data tasks.db --addr 127.0.0.1:8000
+  --server gin --backend sqlite --data tasks.db \
+  --host 127.0.0.1 --port 8000
 ```
 
 Choose either client regardless of the running server:
@@ -109,6 +122,33 @@ go run ./projects/tasks/solution/cmd/tasks \
 
 The CLI contract also includes `show`, `update`, `complete`, and `remove`; see
 [`docs/SPEC.md`](docs/SPEC.md#command-line-client-contract).
+
+## Project quality gates
+
+CI runs the starter and complete solution on Go 1.25.x and 1.26.x. The current
+Go job additionally race-tests the whole project and requires at least 85%
+statement coverage across every non-command solution package. Thin
+`cmd/tasks-api` and `cmd/tasks` composition entry points are excluded from the
+coverage denominator; their selection and failure behavior still has direct
+tests.
+
+```bash
+go test -race -timeout=5m -count=1 ./projects/tasks/...
+
+task_packages=$(go list ./projects/tasks/solution/... | grep -v '/cmd/')
+task_coverpkg=$(printf '%s\n' "$task_packages" | paste -sd, -)
+go test -timeout=3m -count=1 \
+  -coverpkg="$task_coverpkg" \
+  -coverprofile=tasks-coverage.out \
+  $task_packages \
+  ./projects/tasks/tests/... \
+  ./projects/tasks
+bash scripts/check-coverage.sh tasks-coverage.out 85
+rm tasks-coverage.out
+```
+
+See [`../../docs/QUALITY.md`](../../docs/QUALITY.md) for the complete course
+gates, pinned analyzers, vulnerability scan, and link check.
 
 ## What the comparison should reveal
 

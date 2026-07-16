@@ -1,2 +1,2 @@
-// Package server will compose Task services, storage, HTTP adapters, and lifecycle.
+// Package server composes Task services, storage, HTTP adapters, and lifecycle.
 package server

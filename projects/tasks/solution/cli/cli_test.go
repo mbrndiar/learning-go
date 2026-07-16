@@ -157,3 +157,21 @@ func TestNormalizedSettingsReachFactory(t *testing.T) {
 		t.Fatalf("exit=%d config=%#v stderr=%q", exit, actual, stderr.String())
 	}
 }
+
+func TestDurationTimeoutAndTitleUpdateReachMain(t *testing.T) {
+	var actual client.Config
+	transport := &fakeTransport{}
+	var stdout, stderr bytes.Buffer
+	exit := cli.Main([]string{"--timeout", "250ms", "update", "7", "--title", "Revised"},
+		func(config client.Config) (client.Transport, error) {
+			actual = config
+			return transport, nil
+		}, &stdout, &stderr)
+	if exit != 0 || actual.Timeout != 250*time.Millisecond || stderr.Len() != 0 {
+		t.Fatalf("exit=%d config=%#v stdout=%q stderr=%q", exit, actual, stdout.String(), stderr.String())
+	}
+	if transport.input.Title == nil || *transport.input.Title != "Revised" ||
+		transport.input.Completed != nil {
+		t.Fatalf("update input = %#v", transport.input)
+	}
+}

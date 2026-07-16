@@ -18,7 +18,9 @@ go test ./...
 is useful after completing every exercise, but it is not the clean-checkout
 health command. The capstone starters are different: their small harnesses
 recognize the explicit `ErrNotImplemented`/HTTP 501 placeholders, while CI also
-type-checks every starter package with `go test -run '^$'`.
+type-checks every starter package with `go test -run '^$'`. The Tasks starter
+uses the same compile-plus-harness pattern and additionally proves placeholder
+commands have no storage side effects.
 
 CI keeps learner intent separate from repository health:
 
@@ -38,6 +40,13 @@ go list ./exercises/... |
 go list ./exercises/... |
   grep '/solution$' |
   xargs -r go test
+
+go test -timeout=2m -run '^$' ./projects/tasks/starter/...
+go test -timeout=2m -count=1 ./projects/tasks/starter/...
+go test -timeout=3m -count=1 \
+  ./projects/tasks/solution/... \
+  ./projects/tasks/tests/... \
+  ./projects/tasks
 
 go test -run '^$' \
   ./capstones/comparative/starter/... \
@@ -92,17 +101,36 @@ go test -race ./lessons/12_rest_apis_and_clients/...
 go test -race ./exercises/10_concurrency/solution
 go test -race ./exercises/11_sql_and_sqlite/solution
 go test -race ./exercises/12_rest_apis_and_clients/solution
+go test -race -timeout=5m -count=1 ./projects/tasks/...
 ```
 
 It does not use `go test -race ./...`, because that would run the intentionally
-failing exercise starter tests and would obscure the defined race surface.
+failing exercise starter tests and would obscure the defined race surface. The
+Tasks project itself is fully race-tested, including its starter harness,
+solution packages, shared contracts, real-loopback lifecycle, and complete
+client/server matrix.
 
 ## Coverage
 
-CI enforces 85% for the idiomatic monitor and 75% for the comparative
-command/process implementation:
+CI enforces 85% for every non-command Tasks solution package together, 85% for
+the idiomatic monitor, and 75% for the comparative command/process
+implementation. Tasks coverage instruments the complete substantive solution
+surface and exercises it through unit, contract, OpenAPI, lifecycle, and
+interoperability tests; only the two thin `cmd` entry-point packages are
+excluded:
 
 ```bash
+task_packages=$(go list ./projects/tasks/solution/... | grep -v '/cmd/')
+task_coverpkg=$(printf '%s\n' "$task_packages" | paste -sd, -)
+go test -timeout=3m -count=1 \
+  -coverpkg="$task_coverpkg" \
+  -coverprofile=tasks-coverage.out \
+  $task_packages \
+  ./projects/tasks/tests/... \
+  ./projects/tasks
+bash scripts/check-coverage.sh tasks-coverage.out 85
+rm tasks-coverage.out
+
 go test -coverprofile=idiomatic-coverage.out \
   ./capstones/idiomatic/solution/monitor/...
 bash scripts/check-coverage.sh idiomatic-coverage.out 85
@@ -158,6 +186,9 @@ go install honnef.co/go/tools/cmd/staticcheck@v0.7.0
 {
   go list ./lessons/...
   go list ./exercises/... | grep '/solution$'
+  go list ./projects/tasks/solution/...
+  go list ./projects/tasks/tests/...
+  go list ./projects/tasks
   go list ./capstones/comparative/solution/...
   go list ./capstones/comparative/tests/...
   go list ./capstones/idiomatic/solution/...
@@ -170,9 +201,10 @@ go install golang.org/x/vuln/cmd/govulncheck@v1.6.0
 "$(go env GOPATH)/bin/govulncheck" ./...
 ```
 
-`go vet ./...` and `govulncheck ./...` can inspect the whole buildable module.
-Staticcheck deliberately follows the completed-code package list above so
-learner placeholders do not become the repository's style baseline.
+`go vet ./...` and `govulncheck ./...` inspect the whole buildable module.
+Staticcheck includes the completed Tasks solution and reusable contracts, and
+deliberately omits learner placeholders so they do not become the repository's
+style baseline.
 `govulncheck` also scans the Go standard library, so run it with a current patch
 toolchain; an unpatched base release can correctly fail even when dependencies
 are clean.

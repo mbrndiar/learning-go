@@ -188,7 +188,8 @@ concurrency, HTTP, and tooling reference.
 
 Work through the modules in order. Module 10 establishes concurrency and
 cancellation, Module 11 adds relational persistence, and Module 12 applies those
-boundaries to HTTP services and clients before the capstones.
+boundaries to HTTP services and clients. Then complete the required
+[`Tasks project`](projects/tasks/README.md) before the capstones.
 
 ## 🆘 Getting help from the material
 

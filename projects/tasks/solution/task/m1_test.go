@@ -53,6 +53,27 @@ func TestMilestone1(t *testing.T) {
 	})
 }
 
+func TestExportedValidationHelpers(t *testing.T) {
+	title := "Learn adapters"
+	completed := false
+	if err := task.ValidateUpdate(task.UpdateInput{Title: &title, Completed: &completed}); err != nil {
+		t.Fatalf("ValidateUpdate(valid) = %v", err)
+	}
+	padded := " Learn adapters "
+	if err := task.ValidateUpdate(task.UpdateInput{Title: &padded}); !errors.Is(err, task.ErrValidation) {
+		t.Fatalf("ValidateUpdate(padded) = %v", err)
+	}
+	if err := task.ValidateUpdate(task.UpdateInput{}); !errors.Is(err, task.ErrValidation) {
+		t.Fatalf("ValidateUpdate(empty) = %v", err)
+	}
+	if err := task.ValidateListFilter(task.ListFilter{}); err != nil {
+		t.Fatalf("ValidateListFilter(empty) = %v", err)
+	}
+	if err := task.ValidateListFilter(task.ListFilter{Completed: &completed}); err != nil {
+		t.Fatalf("ValidateListFilter(false) = %v", err)
+	}
+}
+
 type repositoryAdapter struct {
 	repository m1.Repository
 }

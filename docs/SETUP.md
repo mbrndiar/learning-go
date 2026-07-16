@@ -44,8 +44,9 @@ GOTOOLCHAIN=go1.26.5 go version
 ## 4. Download module dependencies
 
 Most lessons use only the standard library. Module 11 and the comparative
-capstone use SQLite; Module 12 uses Chi, Gin, and Resty. Download all pinned
-dependencies:
+capstone use SQLite. Module 12 introduces the HTTP material, and the required
+Tasks project uses the pinned SQLite, Chi, Gin, Resty, and OpenAPI dependencies.
+Download everything:
 
 ```bash
 go mod download
@@ -89,6 +90,8 @@ This is deliberate, not a CI exception being ignored. The course workflow
 compiles starters without running their tests and separately tests every
 completed lesson, solution, and capstone harness. Use
 [`QUALITY.md`](QUALITY.md) for the exact CI-defined commands and tool pins.
+That guide also lists the Tasks starter harness, full three-server-by-two-client
+solution tests, race gate, and project coverage gate.
 
 ## Troubleshooting
 

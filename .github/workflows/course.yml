@@ -72,6 +72,18 @@ jobs:
             grep '/solution$' |
             xargs -r go test
 
+      - name: Compile and check Tasks starter harness
+        run: |
+          go test -timeout=2m -run '^$' ./projects/tasks/starter/...
+          go test -timeout=2m -count=1 ./projects/tasks/starter/...
+
+      - name: Run Tasks solution and contracts
+        run: |
+          go test -timeout=3m -count=1 \
+            ./projects/tasks/solution/... \
+            ./projects/tasks/tests/... \
+            ./projects/tasks
+
       - name: Compile capstone starters
         run: |
           go test -run '^$' \
@@ -112,15 +124,29 @@ jobs:
           go test -race ./exercises/10_concurrency/solution
           go test -race ./exercises/11_sql_and_sqlite/solution
           go test -race ./exercises/12_rest_apis_and_clients/solution
+          go test -race -timeout=5m -count=1 ./projects/tasks/...
 
       - name: Enforce coverage thresholds
         if: matrix.go-version == '1.26.x'
         run: |
-          go test -coverprofile=idiomatic-coverage.out \
+          comparative_coverage=capstones/comparative/.coverage
+          cleanup() {
+            rm -f tasks-coverage.out idiomatic-coverage.out comparative-coverage.out
+            rm -rf "$comparative_coverage"
+          }
+          trap cleanup EXIT
+          task_packages=$(go list ./projects/tasks/solution/... | grep -v '/cmd/')
+          task_coverpkg=$(printf '%s\n' "$task_packages" | paste -sd, -)
+          go test -timeout=3m -count=1 \
+            -coverpkg="$task_coverpkg" \
+            -coverprofile=tasks-coverage.out \
+            $task_packages \
+            ./projects/tasks/tests/... \
+            ./projects/tasks
+          bash scripts/check-coverage.sh tasks-coverage.out 85
+          go test -timeout=3m -coverprofile=idiomatic-coverage.out \
             ./capstones/idiomatic/solution/monitor/...
           bash scripts/check-coverage.sh idiomatic-coverage.out 85
-          comparative_coverage=capstones/comparative/.coverage
-          trap 'rm -rf "$comparative_coverage"' EXIT
           mkdir -p \
             "$comparative_coverage/bin" \
             "$comparative_coverage/data"
@@ -130,7 +156,7 @@ jobs:
             ./capstones/comparative/solution/kvstore/cmd/kvstore
           COMPARATIVE_KV_PROGRAM="$PWD/$comparative_coverage/bin/kvstore" \
           GOCOVERDIR="$PWD/$comparative_coverage/data" \
-            go test ./capstones/comparative/solution/kvstore
+            go test -timeout=3m ./capstones/comparative/solution/kvstore
           coverage_inputs=$(
             find "$comparative_coverage/data" \
               -mindepth 1 -maxdepth 1 -type d -printf '%p,' |
@@ -140,7 +166,7 @@ jobs:
             -i="$coverage_inputs" \
             -o=comparative-coverage.out
           bash scripts/check-coverage.sh comparative-coverage.out 75
-          rm -rf "$comparative_coverage"
+          cleanup
           trap - EXIT
 
       - name: Run fuzz smoke test
@@ -162,6 +188,9 @@ jobs:
           {
             go list ./lessons/...
             go list ./exercises/... | grep '/solution$'
+            go list ./projects/tasks/solution/...
+            go list ./projects/tasks/tests/...
+            go list ./projects/tasks
             go list ./capstones/comparative/solution/...
             go list ./capstones/comparative/tests/...
             go list ./capstones/idiomatic/solution/...

@@ -1,2 +1,2 @@
-// Package cli will own shared Task command parsing, output, and exit-code policy.
+// Package cli owns shared Task command parsing, output, and exit-code policy.
 package cli

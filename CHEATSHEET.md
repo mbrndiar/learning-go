@@ -189,6 +189,16 @@ exercise starter is implemented. CI instead compiles starters without running
 their behavior tests and tests the completed course surfaces; see
 [`docs/QUALITY.md`](docs/QUALITY.md).
 
+For the required Tasks project, use its explicit starter/solution split:
+
+```bash
+go test -timeout=2m -count=1 ./projects/tasks/starter/...
+go test -timeout=3m -count=1 \
+  ./projects/tasks/solution/... \
+  ./projects/tasks/tests/... \
+  ./projects/tasks
+```
+
 ## Further reading
 
 - <https://go.dev/doc/>

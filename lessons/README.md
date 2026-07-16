@@ -44,5 +44,7 @@ zero-value behavior, error paths, and why a design is race safe.
 - After module 10: implement a bounded worker pool with cancellation.
 - After module 11: design a relational schema and implement a tested
   `database/sql` repository with one atomic multi-step operation.
-- After module 12: expose one repository operation through a strict JSON
-  boundary and call one upstream service with cancellation and cleanup.
+- After module 12: complete the required
+  [`Task REST API and clients`](../projects/tasks/README.md) project, progressing
+  from the shared domain and repositories to three servers, two clients,
+  OpenAPI validation, and full interoperability.
