@@ -13,8 +13,14 @@ type Repository struct {
 
 var _ task.Repository = (*Repository)(nil)
 
-// Open is an exercise placeholder.
+// Open is an exercise placeholder. It should become a compatibility wrapper
+// around OpenContext using context.Background().
 func Open(path string) (*Repository, error) {
+	return OpenContext(context.Background(), path)
+}
+
+// OpenContext is an exercise placeholder.
+func OpenContext(ctx context.Context, path string) (*Repository, error) {
 	return nil, task.ErrNotImplemented
 }
 

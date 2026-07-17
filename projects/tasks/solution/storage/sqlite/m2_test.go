@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -64,6 +65,27 @@ func TestClosedRepositoryWrapsStorageFailure(t *testing.T) {
 	var storageError *task.StorageError
 	if !errors.As(err, &storageError) || storageError.Operation == "" || storageError.Err == nil {
 		t.Fatalf("List error = %#v; want operation and underlying cause", err)
+	}
+}
+
+func TestOpenContextPreCanceled(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	path := filepath.Join(t.TempDir(), "tasks.db")
+	repository, err := sqlite.OpenContext(ctx, path)
+	if repository != nil {
+		repository.Close()
+		t.Fatal("OpenContext returned a repository for a pre-canceled context")
+	}
+	if !errors.Is(err, task.ErrStorage) {
+		t.Fatalf("OpenContext error = %v; want ErrStorage", err)
+	}
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("OpenContext error = %v; want context.Canceled", err)
+	}
+	if _, statErr := os.Stat(path); !errors.Is(statErr, os.ErrNotExist) {
+		t.Fatalf("OpenContext created %s on a pre-canceled context", path)
 	}
 }
 

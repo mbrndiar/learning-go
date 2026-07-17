@@ -145,6 +145,46 @@ func TestFactoryAndCleanupFailures(t *testing.T) {
 	}
 }
 
+// TestOperationErrorTakesPrecedenceOverCleanupFailure proves that when both
+// the command operation and the subsequent transport Close fail, the
+// operation's own error category and message win: a cleanup failure must
+// never mask an API, response-validation, or connection error.
+func TestOperationErrorTakesPrecedenceOverCleanupFailure(t *testing.T) {
+	cases := []struct {
+		err    error
+		exit   int
+		stderr string
+	}{
+		{&client.APIError{Status: 404, Code: "not_found", Message: "task 7 was not found"}, 3, "api: 404 not_found: task 7 was not found\n"},
+		{&client.ResponseError{Status: 200, Message: "invalid task response"}, 4, "malformed-response: invalid task response\n"},
+		{&client.ConnectionError{Err: context.DeadlineExceeded}, 5, "connection: timeout: deadline exceeded\n"},
+		{&client.ConnectionError{Err: errors.New("connection refused")}, 5, "connection: connection refused\n"},
+		{errors.New("private library detail"), 5, "transport: request failed\n"},
+	}
+	for _, test := range cases {
+		var stdout, stderr bytes.Buffer
+		exit := cli.Run([]string{"list"}, func(client.Config) (client.Transport, error) {
+			return &fakeTransport{err: test.err, closeErr: errors.New("private close detail")}, nil
+		}, &stdout, &stderr)
+		if exit != test.exit || stdout.Len() != 0 || stderr.String() != test.stderr {
+			t.Fatalf("%v => exit=%d stdout=%q stderr=%q", test.err, exit, stdout.String(), stderr.String())
+		}
+	}
+}
+
+// TestCleanupFailureAfterSuccessReportsConnectionWithNoStdout proves that a
+// Close failure is only surfaced when the command itself succeeded, and that
+// no partial output is ever written to stdout when cleanup fails.
+func TestCleanupFailureAfterSuccessReportsConnectionWithNoStdout(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	exit := cli.Run([]string{"list"}, func(client.Config) (client.Transport, error) {
+		return &fakeTransport{closeErr: errors.New("private close detail")}, nil
+	}, &stdout, &stderr)
+	if exit != cli.ExitConnection || stdout.Len() != 0 || stderr.String() != "transport: request failed\n" {
+		t.Fatalf("success+cleanup => exit=%d stdout=%q stderr=%q", exit, stdout.String(), stderr.String())
+	}
+}
+
 func TestNormalizedSettingsReachFactory(t *testing.T) {
 	var actual client.Config
 	var stdout, stderr bytes.Buffer

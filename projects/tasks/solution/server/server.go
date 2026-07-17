@@ -84,11 +84,13 @@ func (config Config) Validate() (Config, error) {
 
 // Server owns one listener and the HTTP server that serves it.
 type Server struct {
-	listener net.Listener
-	http     *http.Server
-	shutdown time.Duration
-	mu       sync.Mutex
-	served   bool
+	listener  net.Listener
+	http      *http.Server
+	shutdown  time.Duration
+	mu        sync.Mutex
+	served    bool
+	closeOnce sync.Once
+	closeErr  error
 }
 
 // New opens a listener and constructs a server that owns it.
@@ -97,11 +99,18 @@ func New(config Config, handler http.Handler) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
+	return newValidated(validated, handler)
+}
+
+// newValidated builds a Server bound to validated.Host and validated.Port.
+// Callers that already hold a validated Config (Run, tests) use this instead
+// of New to avoid re-running Validate.
+func newValidated(validated Config, handler http.Handler) (*Server, error) {
 	listener, err := net.Listen("tcp", net.JoinHostPort(validated.Host, strconv.Itoa(validated.Port)))
 	if err != nil {
 		return nil, fmt.Errorf("%w: listen: %v", ErrLifecycle, err)
 	}
-	server, err := NewWithListener(validated, listener, handler)
+	server, err := newWithValidatedListener(validated, listener, handler)
 	if err != nil {
 		_ = listener.Close()
 		return nil, err
@@ -116,6 +125,13 @@ func NewWithListener(config Config, listener net.Listener, handler http.Handler)
 	if err != nil {
 		return nil, err
 	}
+	return newWithValidatedListener(validated, listener, handler)
+}
+
+// newWithValidatedListener builds a Server for an already-validated config and
+// listener. New and NewWithListener validate their caller-supplied Config
+// before delegating here so validation never runs twice for one construction.
+func newWithValidatedListener(validated Config, listener net.Listener, handler http.Handler) (*Server, error) {
 	if listener == nil || handler == nil {
 		return nil, fmt.Errorf("%w: listener and handler are required", ErrInvalidConfig)
 	}
@@ -186,57 +202,151 @@ func (server *Server) Serve(ctx context.Context) error {
 	}
 }
 
-// Close immediately closes the HTTP server and its listener.
+// Close immediately closes the HTTP server and its listener. Close is
+// idempotent: only the first call performs work (guarded by sync.Once), and
+// every later call returns that exact same result rather than recomputing
+// or masking a first-call failure, including before Serve has ever run
+// (http.Server.Close only closes listeners it has learned about through
+// Serve, so Close closes server.listener directly to guarantee it is
+// released either way). http.ErrServerClosed and net.ErrClosed indicate the
+// server or listener was already shut down, not a Close failure, so they are
+// ignored; any other failure is wrapped in, and remains matchable as, both
+// ErrLifecycle and the underlying close error.
 func (server *Server) Close() error {
 	if server == nil || server.http == nil {
 		return nil
 	}
-	if err := server.http.Close(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		return fmt.Errorf("%w: close: %v", ErrLifecycle, err)
+	server.closeOnce.Do(func() {
+		httpErr := ignoreExpectedCloseErr(server.http.Close())
+		var listenerErr error
+		if server.listener != nil {
+			listenerErr = ignoreExpectedCloseErr(server.listener.Close())
+		}
+		if err := errors.Join(httpErr, listenerErr); err != nil {
+			server.closeErr = fmt.Errorf("%w: close: %w", ErrLifecycle, err)
+		}
+	})
+	return server.closeErr
+}
+
+// ignoreExpectedCloseErr reports nil for the sentinel errors that
+// http.Server.Close and net.Listener.Close return when the server or
+// listener was already closed, since that outcome is exactly what Close
+// wants and is not itself a failure.
+func ignoreExpectedCloseErr(err error) error {
+	if err == nil || errors.Is(err, http.ErrServerClosed) || errors.Is(err, net.ErrClosed) {
+		return nil
 	}
-	return nil
+	return err
+}
+
+// lifecycle is the subset of *Server that Run needs. It lets tests substitute
+// a fake that returns deterministic Serve/Close failures without binding a
+// real listener.
+type lifecycle interface {
+	Serve(ctx context.Context) error
+	Close() error
+}
+
+// runDependencies are the composition seams Run delegates to. Tests replace
+// them with in-memory doubles so repository-close and server-close failures
+// can be exercised deterministically, without a live database or socket.
+type runDependencies struct {
+	openRepository func(ctx context.Context, backend, data string) (task.Repository, func() error, error)
+	newHandler     func(serverName string, service *task.Service, logger *slog.Logger) (http.Handler, error)
+	newServer      func(validated Config, handler http.Handler) (lifecycle, error)
+}
+
+func defaultRunDependencies() runDependencies {
+	return runDependencies{
+		openRepository: openRepositoryBackend,
+		newHandler:     newAPIHandler,
+		newServer: func(validated Config, handler http.Handler) (lifecycle, error) {
+			return newValidated(validated, handler)
+		},
+	}
+}
+
+// openRepositoryBackend opens the repository named by backend using ctx, and
+// returns its close function alongside it. Propagating ctx into OpenContext
+// lets Run's caller abort a slow open instead of blocking indefinitely. The
+// default arm defends against a backend name that reaches here despite
+// Config.Validate already rejecting it.
+func openRepositoryBackend(ctx context.Context, backend, data string) (task.Repository, func() error, error) {
+	switch backend {
+	case "sqlite":
+		repository, err := sqlite.OpenContext(ctx, data)
+		if err != nil {
+			return nil, nil, err
+		}
+		return repository, repository.Close, nil
+	case "markdown":
+		repository, err := markdown.OpenContext(ctx, data)
+		if err != nil {
+			return nil, nil, err
+		}
+		return repository, func() error { return nil }, nil
+	default:
+		return nil, nil, fmt.Errorf("%w: backend %q is not supported", ErrInvalidConfig, backend)
+	}
+}
+
+// newAPIHandler builds the HTTP handler named by serverName. The default arm
+// defends against a server name that reaches here despite Config.Validate
+// already rejecting it.
+func newAPIHandler(serverName string, service *task.Service, logger *slog.Logger) (http.Handler, error) {
+	switch serverName {
+	case "nethttp":
+		return apinethttp.New(service, logger), nil
+	case "chi":
+		return apichi.New(service, logger), nil
+	case "gin":
+		return apigin.New(service, logger), nil
+	default:
+		return nil, fmt.Errorf("%w: server %q is not supported", ErrInvalidConfig, serverName)
+	}
 }
 
 // Run selects adapters, owns their resources, and serves until ctx is canceled.
 func Run(ctx context.Context, config Config, logger *slog.Logger) error {
+	return run(ctx, config, logger, defaultRunDependencies())
+}
+
+// run implements Run against injectable deps so cleanup-error propagation can
+// be tested without a live database or listening socket.
+func run(ctx context.Context, config Config, logger *slog.Logger, deps runDependencies) error {
+	if logger == nil {
+		logger = slog.Default()
+	}
 	validated, err := config.Validate()
 	if err != nil {
 		return err
 	}
-	var repository task.Repository
-	var closeRepository func() error
-	switch validated.Backend {
-	case "sqlite":
-		value, openErr := sqlite.Open(validated.Data)
-		if openErr != nil {
-			return openErr
-		}
-		repository = value
-		closeRepository = value.Close
-	case "markdown":
-		value, openErr := markdown.Open(validated.Data)
-		if openErr != nil {
-			return openErr
-		}
-		repository = value
-		closeRepository = func() error { return nil }
+	if ctx == nil {
+		// context.Context methods panic on a nil interface value, and
+		// OpenContext relies on ctx.Done()/ctx.Err(); guard here, before any
+		// resource is opened, so a nil ctx fails gracefully instead of
+		// panicking deep inside a storage backend.
+		return fmt.Errorf("%w: context is required", ErrLifecycle)
 	}
-	defer closeRepository()
 
-	service := task.NewService(repository)
-	var handler http.Handler
-	switch validated.Server {
-	case "nethttp":
-		handler = apinethttp.New(service, logger)
-	case "chi":
-		handler = apichi.New(service, logger)
-	case "gin":
-		handler = apigin.New(service, logger)
-	}
-	active, err := New(validated, handler)
+	repository, closeRepository, err := deps.openRepository(ctx, validated.Backend, validated.Data)
 	if err != nil {
 		return err
 	}
-	defer active.Close()
-	return active.Serve(ctx)
+
+	service := task.NewService(repository)
+	handler, err := deps.newHandler(validated.Server, service, logger)
+	if err != nil {
+		return errors.Join(err, closeRepository())
+	}
+
+	active, err := deps.newServer(validated, handler)
+	if err != nil {
+		return errors.Join(err, closeRepository())
+	}
+
+	serveErr := active.Serve(ctx)
+	closeErr := active.Close()
+	return errors.Join(serveErr, closeErr, closeRepository())
 }

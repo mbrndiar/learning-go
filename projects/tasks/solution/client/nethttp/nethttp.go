@@ -36,9 +36,13 @@ func New(config client.Config) (*Client, error) {
 	return NewWithHTTPClient(config, nil)
 }
 
-// NewWithHTTPClient constructs a Task transport around httpClient.
-// When its timeout must be capped, the client value is copied so the caller's
-// configuration is not mutated. Other caller-supplied policies remain intact.
+// NewWithHTTPClient constructs a Task transport around httpClient. The
+// client value is always copied so the caller's configuration is never
+// mutated; other caller-supplied policies such as Transport and Jar remain
+// intact. The project timeout is enforced as a cap, and redirect responses
+// are always treated as part of the API contract: they must be validated by
+// the caller rather than silently followed, regardless of any redirect
+// policy the caller-supplied client may have configured.
 func NewWithHTTPClient(config client.Config, httpClient *http.Client) (*Client, error) {
 	validated, err := config.Validate()
 	if err != nil {
@@ -49,18 +53,18 @@ func NewWithHTTPClient(config client.Config, httpClient *http.Client) (*Client, 
 		return nil, err
 	}
 	if httpClient == nil {
-		httpClient = &http.Client{
-			Timeout: validated.Timeout,
-			// Redirect responses are part of the API contract and must be
-			// validated rather than silently followed.
-			CheckRedirect: func(_ *http.Request, _ []*http.Request) error {
-				return http.ErrUseLastResponse
-			},
-		}
-	} else if httpClient.Timeout <= 0 || httpClient.Timeout > validated.Timeout {
+		httpClient = &http.Client{}
+	} else {
 		copy := *httpClient
-		copy.Timeout = validated.Timeout
 		httpClient = &copy
+	}
+	if httpClient.Timeout <= 0 || httpClient.Timeout > validated.Timeout {
+		httpClient.Timeout = validated.Timeout
+	}
+	// Redirect responses are part of the API contract and must be
+	// validated rather than silently followed.
+	httpClient.CheckRedirect = func(_ *http.Request, _ []*http.Request) error {
+		return http.ErrUseLastResponse
 	}
 	return &Client{baseURL: baseURL, http: httpClient}, nil
 }

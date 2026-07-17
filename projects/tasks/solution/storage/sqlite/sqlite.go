@@ -36,8 +36,19 @@ type Repository struct {
 
 var _ task.Repository = (*Repository)(nil)
 
-// Open opens path, initializes its schema, and returns its owning repository.
+// Open opens path, initializes its schema, and returns its owning
+// repository. It is a compatibility wrapper around OpenContext for callers
+// that have no context to propagate.
 func Open(path string) (*Repository, error) {
+	return OpenContext(context.Background(), path)
+}
+
+// OpenContext opens path and initializes its schema using ctx, and returns
+// its owning repository. ctx governs the schema initialization statement and
+// its read-back; canceling it aborts a slow initialize instead of blocking
+// indefinitely, and a context that is already done when OpenContext is
+// called fails immediately without creating or altering the database file.
+func OpenContext(ctx context.Context, path string) (*Repository, error) {
 	absolute, err := filepath.Abs(path)
 	if err != nil {
 		return nil, task.WrapStorage("open sqlite", err)
@@ -55,7 +66,7 @@ func Open(path string) (*Repository, error) {
 	db.SetMaxIdleConns(1)
 
 	repository := &Repository{db: db}
-	if err := repository.initialize(context.Background()); err != nil {
+	if err := repository.initialize(ctx); err != nil {
 		_ = db.Close()
 		return nil, err
 	}

@@ -200,16 +200,22 @@ func Run(args []string, factory Factory, stdout, stderr io.Writer) int {
 	default:
 		err = errors.New("unknown parsed command")
 	}
-	// The CLI owns the transport produced by factory, so it closes it on both
-	// successful and failed requests before rendering the final result.
+	// The CLI owns the transport produced by factory, so it always closes it
+	// on both successful and failed requests. A command error takes
+	// precedence over a cleanup failure: the command's own error, response
+	// validation, or connection failure is what the caller needs to see. Only
+	// when the command itself succeeded does a Close failure surface as
+	// ExitConnection, and it does so before anything is written to stdout.
+	var closeErr error
 	if closer, ok := transport.(interface{ Close() error }); ok {
-		if closeErr := closer.Close(); closeErr != nil {
-			fmt.Fprintln(stderr, "transport: request failed")
-			return ExitConnection
-		}
+		closeErr = closer.Close()
 	}
 	if err != nil {
 		return renderError(err, stderr)
+	}
+	if closeErr != nil {
+		fmt.Fprintln(stderr, "transport: request failed")
+		return ExitConnection
 	}
 	encoder := json.NewEncoder(stdout)
 	encoder.SetEscapeHTML(false)

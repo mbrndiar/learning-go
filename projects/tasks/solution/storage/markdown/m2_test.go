@@ -23,6 +23,26 @@ func TestRepositoryContract(t *testing.T) {
 	})
 }
 
+func TestOpenContextPreCanceled(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	path := filepath.Join(t.TempDir(), "tasks.md")
+	repository, err := markdown.OpenContext(ctx, path)
+	if repository != nil {
+		t.Fatal("OpenContext returned a repository for a pre-canceled context")
+	}
+	if !errors.Is(err, task.ErrStorage) {
+		t.Fatalf("OpenContext error = %v; want ErrStorage", err)
+	}
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("OpenContext error = %v; want context.Canceled", err)
+	}
+	if _, statErr := os.Stat(path); !errors.Is(statErr, os.ErrNotExist) {
+		t.Fatalf("OpenContext created %s on a pre-canceled context", path)
+	}
+}
+
 func TestMissingFileInitializesExactDocument(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "tasks.md")
 	if _, err := markdown.Open(path); err != nil {

@@ -183,11 +183,11 @@ The CLI contract also includes `show`, `update`, `complete`, and `remove`; see
 ## Project quality gates
 
 CI runs the starter and complete solution on Go 1.25.x and 1.26.x. The current
-Go job additionally race-tests the whole project and requires at least 85%
-statement coverage across every non-command solution package. Thin
-`cmd/tasks-api` and `cmd/tasks` composition entry points are excluded from the
-coverage denominator; their selection and failure behavior still has direct
-tests.
+Go job additionally race-tests the whole project, smoke-fuzzes its strict JSON
+and Markdown parsers, and requires at least 85% statement coverage across every
+non-command solution package. Thin `cmd/tasks-api` and `cmd/tasks` composition
+entry points are excluded from the coverage denominator; their selection and
+failure behavior still has direct tests.
 
 ```bash
 go test -race -timeout=5m -count=1 ./projects/tasks/...

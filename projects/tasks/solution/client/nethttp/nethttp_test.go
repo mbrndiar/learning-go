@@ -170,6 +170,45 @@ func TestConnectionFailureAndFiniteTimeout(t *testing.T) {
 	}
 }
 
+func TestInjectedClientRedirectPolicyIsOverridden(t *testing.T) {
+	followed := false
+	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		if request.URL.Path == "/api/tasks/1" {
+			http.Redirect(writer, request, "/api/tasks/2", http.StatusFound)
+			return
+		}
+		followed = true
+		writer.Header().Set("Content-Type", "application/json")
+		_, _ = writer.Write([]byte(`{"id":2,"title":"redirected","completed":false}`))
+	}))
+	defer server.Close()
+
+	// The zero-value CheckRedirect follows redirects automatically; the
+	// caller-owned client below therefore represents a "follows redirects"
+	// policy that NewWithHTTPClient must override rather than trust.
+	original := &http.Client{Timeout: time.Second}
+	transport, err := clientnethttp.NewWithHTTPClient(
+		client.Config{BaseURL: server.URL + "/api", Timeout: time.Second}, original)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer transport.Close()
+
+	_, err = transport.Get(context.Background(), 1)
+	if followed {
+		t.Fatal("client followed a redirect instead of rejecting it as an unexpected response")
+	}
+	if !errors.Is(err, client.ErrUnexpectedResponse) {
+		t.Fatalf("error = %v, want unexpected response for an unfollowed redirect", err)
+	}
+	if original.CheckRedirect != nil {
+		t.Fatal("original caller-owned client's CheckRedirect was mutated")
+	}
+	if original.Timeout != time.Second {
+		t.Fatal("original caller-owned client's Timeout was mutated")
+	}
+}
+
 type roundTripFunc func(*http.Request) (*http.Response, error)
 
 func (function roundTripFunc) RoundTrip(request *http.Request) (*http.Response, error) {

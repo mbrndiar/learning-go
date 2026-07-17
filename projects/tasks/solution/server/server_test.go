@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"testing"
 	"time"
 
@@ -19,6 +20,44 @@ import (
 	"github.com/mbrndiar/learning-go/projects/tasks/solution/storage/sqlite"
 	"github.com/mbrndiar/learning-go/projects/tasks/solution/task"
 )
+
+// freeLoopbackPort reserves and releases a loopback TCP port so a test can
+// bind config.Port ahead of time and poll it for readiness afterward.
+func freeLoopbackPort(t *testing.T) int {
+	t.Helper()
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	port := listener.Addr().(*net.TCPAddr).Port
+	if err := listener.Close(); err != nil {
+		t.Fatal(err)
+	}
+	return port
+}
+
+// waitForAcceptingConnections blocks until host:port accepts a TCP
+// connection or the deadline elapses. A successful dial proves the whole
+// composition pipeline (repository open, handler construction, and
+// listener bind) has finished, which is the only reliable point at which a
+// test can cancel Run's context without racing a still-in-flight storage
+// open.
+func waitForAcceptingConnections(t *testing.T, host string, port int) {
+	t.Helper()
+	address := net.JoinHostPort(host, strconv.Itoa(port))
+	deadline := time.Now().Add(2 * time.Second)
+	for {
+		conn, err := net.DialTimeout("tcp", address, 50*time.Millisecond)
+		if err == nil {
+			_ = conn.Close()
+			return
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("%s never started accepting connections: %v", address, err)
+		}
+		time.Sleep(time.Millisecond)
+	}
+}
 
 func TestRealLoopbackLifecycleRepeated(t *testing.T) {
 	for iteration := 0; iteration < 10; iteration++ {
@@ -175,12 +214,35 @@ func TestRunComposesEveryServerAndBackend(t *testing.T) {
 				config := server.DefaultConfig()
 				config.Server = serverName
 				config.Backend = backend
-				config.Port = 0
+				config.Host = "127.0.0.1"
+				config.Port = freeLoopbackPort(t)
 				config.Data = filepath.Join(directory, serverName+"."+backend)
+
 				ctx, cancel := context.WithCancel(context.Background())
+				t.Cleanup(cancel)
+
+				result := make(chan error, 1)
+				go func() { result <- server.Run(ctx, config, logger) }()
+
+				// Run's context now reaches the storage opener, so canceling
+				// it before Run starts (as this test used to) would make
+				// OpenContext fail immediately instead of exercising
+				// graceful shutdown. A backend file can exist on disk before
+				// its schema/initialization finishes (sqlite creates the
+				// file before running its init statement), so wait for the
+				// server to actually accept connections instead: that only
+				// happens once the repository, handler, and listener have
+				// all finished constructing under the still-live context.
+				waitForAcceptingConnections(t, config.Host, config.Port)
 				cancel()
-				if err := server.Run(ctx, config, logger); err != nil {
-					t.Fatal(err)
+
+				select {
+				case err := <-result:
+					if err != nil {
+						t.Fatal(err)
+					}
+				case <-time.After(2 * time.Second):
+					t.Fatal("Run did not return after cancellation")
 				}
 			})
 		}
@@ -234,6 +296,132 @@ func TestConfigAndLifecycleRejectInvalidBoundaries(t *testing.T) {
 		t.Fatalf("nil server Close() = %v", err)
 	}
 }
+
+func TestCloseBeforeServeClosesOwnedListener(t *testing.T) {
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	config := server.DefaultConfig()
+	active, err := server.NewWithListener(config, listener, http.NotFoundHandler())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := active.Close(); err != nil {
+		t.Fatalf("Close() before Serve = %v", err)
+	}
+
+	// http.Server.Close only closes listeners it learned about through Serve,
+	// so the owned listener must be closed directly. Dialing it after Close
+	// must fail because the listener is gone rather than merely idle.
+	if _, err := net.Dial("tcp", listener.Addr().String()); err == nil {
+		t.Fatal("listener still accepts connections after Close before Serve")
+	}
+
+	// Serve must not hang or panic against an already-closed listener. Close
+	// already marked the underlying http.Server as shutting down, so Serve
+	// observes http.ErrServerClosed and returns promptly and successfully,
+	// the same graceful outcome as calling Serve then canceling ctx.
+	result := make(chan error, 1)
+	go func() { result <- active.Serve(context.Background()) }()
+	select {
+	case err := <-result:
+		if err != nil {
+			t.Fatalf("Serve() after Close() before Serve = %v", err)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("Serve() after Close() before Serve did not return")
+	}
+}
+
+func TestCloseIsIdempotent(t *testing.T) {
+	config := server.DefaultConfig()
+	config.Port = 0
+	active, err := server.New(config, http.NotFoundHandler())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := active.Close(); err != nil {
+		t.Fatalf("first Close() = %v", err)
+	}
+	if err := active.Close(); err != nil {
+		t.Fatalf("second Close() = %v", err)
+	}
+	if err := active.Close(); err != nil {
+		t.Fatalf("third Close() = %v", err)
+	}
+}
+
+func TestCloseAfterGracefulShutdownIsIdempotent(t *testing.T) {
+	config := server.DefaultConfig()
+	config.Port = 0
+	active, err := server.New(config, http.NotFoundHandler())
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	result := make(chan error, 1)
+	go func() { result <- active.Serve(ctx) }()
+	cancel()
+	if err := <-result; err != nil {
+		t.Fatal(err)
+	}
+
+	if err := active.Close(); err != nil {
+		t.Fatalf("Close() after Serve returned = %v", err)
+	}
+	if err := active.Close(); err != nil {
+		t.Fatalf("second Close() after Serve returned = %v", err)
+	}
+}
+
+func TestCloseReturnsSameFailureOnEveryCall(t *testing.T) {
+	underlying := errors.New("boom: disk unplugged")
+	listener := &countingCloseListener{closeErr: underlying}
+	config := server.DefaultConfig()
+	active, err := server.NewWithListener(config, listener, http.NotFoundHandler())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	first := active.Close()
+	if first == nil {
+		t.Fatal("Close() = nil, want a wrapped listener close failure")
+	}
+	if !errors.Is(first, server.ErrLifecycle) {
+		t.Fatalf("Close() error = %v, want to match ErrLifecycle", first)
+	}
+	if !errors.Is(first, underlying) {
+		t.Fatalf("Close() error = %v, want to match the underlying close error via %%w", first)
+	}
+
+	for i := 0; i < 3; i++ {
+		if again := active.Close(); !errors.Is(again, underlying) || again != first {
+			t.Fatalf("Close() call %d = %v, want the identical first-call result %v", i, again, first)
+		}
+	}
+
+	if listener.closeCalls != 1 {
+		t.Fatalf("listener.Close() was called %d times, want exactly 1 (sync.Once should suppress repeats)", listener.closeCalls)
+	}
+}
+
+// countingCloseListener is a minimal net.Listener whose Close returns a
+// caller-supplied, non-sentinel error and counts how many times Close ran,
+// so tests can assert Close's sync.Once guard prevents repeated work.
+type countingCloseListener struct {
+	closeErr   error
+	closeCalls int
+}
+
+func (*countingCloseListener) Accept() (net.Conn, error) { return nil, errors.New("unused") }
+func (listener *countingCloseListener) Close() error {
+	listener.closeCalls++
+	return listener.closeErr
+}
+func (*countingCloseListener) Addr() net.Addr { return &net.TCPAddr{} }
 
 type stubListener struct{}
 

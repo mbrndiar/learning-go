@@ -35,8 +35,23 @@ type Repository struct {
 
 var _ task.Repository = (*Repository)(nil)
 
-// Open opens path, initializing it only when it does not exist.
+// Open opens path, initializing it only when it does not exist. It is a
+// compatibility wrapper around OpenContext for callers that have no context
+// to propagate.
 func Open(path string) (*Repository, error) {
+	return OpenContext(context.Background(), path)
+}
+
+// OpenContext opens path using ctx, initializing it only when it does not
+// exist. Stat, ReadFile, and the atomic save that back this operation cannot
+// be interrupted mid-flight, so ctx is checked before and after each one; a
+// context that is already done when OpenContext is called returns
+// immediately without touching the filesystem, and one that is done partway
+// through returns an error instead of silently finishing the initialization.
+func OpenContext(ctx context.Context, path string) (*Repository, error) {
+	if err := contextError(ctx); err != nil {
+		return nil, task.WrapStorage("open markdown", err)
+	}
 	absolute, err := filepath.Abs(path)
 	if err != nil {
 		return nil, task.WrapStorage("open markdown", err)
@@ -45,18 +60,27 @@ func Open(path string) (*Repository, error) {
 	repository.mu.Lock()
 	defer repository.mu.Unlock()
 
-	_, err = os.Stat(absolute)
+	_, statErr := os.Stat(absolute)
+	if err := contextError(ctx); err != nil {
+		return nil, task.WrapStorage("open markdown", err)
+	}
 	switch {
-	case err == nil:
+	case statErr == nil:
 		if _, err := repository.load(); err != nil {
 			return nil, task.WrapStorage("open markdown", err)
 		}
-	case errors.Is(err, os.ErrNotExist):
+		if err := contextError(ctx); err != nil {
+			return nil, task.WrapStorage("open markdown", err)
+		}
+	case errors.Is(statErr, os.ErrNotExist):
 		if err := repository.save(document{NextID: 1}); err != nil {
 			return nil, task.WrapStorage("initialize markdown", err)
 		}
+		if err := contextError(ctx); err != nil {
+			return nil, task.WrapStorage("initialize markdown", err)
+		}
 	default:
-		return nil, task.WrapStorage("open markdown", err)
+		return nil, task.WrapStorage("open markdown", statErr)
 	}
 	return repository, nil
 }
@@ -196,6 +220,13 @@ func (r *Repository) load() (document, error) {
 	if err != nil {
 		return document{}, err
 	}
+	return parseDocument(content)
+}
+
+// parseDocument decodes one Markdown checklist document from its raw bytes.
+// It performs no I/O and never panics, so it is safe to call directly on
+// arbitrary (including adversarial) input, such as from a fuzz target.
+func parseDocument(content []byte) (document, error) {
 	if len(content) == 0 {
 		return document{}, errors.New("markdown store is empty")
 	}

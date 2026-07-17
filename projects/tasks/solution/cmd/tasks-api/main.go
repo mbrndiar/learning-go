@@ -42,12 +42,11 @@ func runContext(ctx context.Context, args []string) int {
 	if len(flags.Args()) != 0 {
 		return 2
 	}
-	if _, err := config.Validate(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		return 2
-	}
 	if err := server.Run(ctx, config, slog.Default()); err != nil {
 		fmt.Fprintln(os.Stderr, err)
+		if errors.Is(err, server.ErrInvalidConfig) {
+			return 2
+		}
 		return 1
 	}
 	return 0
