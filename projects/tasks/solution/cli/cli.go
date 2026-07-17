@@ -17,38 +17,59 @@ import (
 	"github.com/mbrndiar/learning-go/projects/tasks/solution/task"
 )
 
+// Exit codes form the stable process contract for scripts invoking tasks.
 const (
-	ExitSuccess            = 0
-	ExitUsage              = 2
-	ExitAPI                = 3
+	// ExitSuccess reports a completed command.
+	ExitSuccess = 0
+	// ExitUsage reports invalid command syntax or configuration.
+	ExitUsage = 2
+	// ExitAPI reports a valid error returned by the Task API.
+	ExitAPI = 3
+	// ExitUnexpectedResponse reports a response outside the wire contract.
 	ExitUnexpectedResponse = 4
-	ExitConnection         = 5
+	// ExitConnection reports transport setup, connection, timeout, or output failure.
+	ExitConnection = 5
 )
 
+// Factory constructs the selected client transport for one command invocation.
 type Factory func(client.Config) (client.Transport, error)
 
+// Settings contains transport-independent CLI connection settings.
 type Settings struct {
 	BaseURL string
 	Timeout time.Duration
 }
 
+// Request is the parsed CLI configuration and concrete command.
 type Request struct {
 	Settings Settings
 	Command  any
 	Help     bool
 }
 
+// AddCommand requests creation of a task.
 type AddCommand struct{ Title string }
+
+// ListCommand requests tasks matching an optional completion filter.
 type ListCommand struct{ Completed *bool }
+
+// ShowCommand requests one task by ID.
 type ShowCommand struct{ ID int64 }
+
+// UpdateCommand requests changes to the fields whose pointers are non-nil.
 type UpdateCommand struct {
 	ID        int64
 	Title     *string
 	Completed *bool
 }
+
+// CompleteCommand marks one task complete.
 type CompleteCommand struct{ ID int64 }
+
+// RemoveCommand deletes one task.
 type RemoveCommand struct{ ID int64 }
 
+// ParseRequest validates global options and parses one Task subcommand.
 func ParseRequest(args []string) (Request, error) {
 	settings := Settings{BaseURL: "http://127.0.0.1:8000", Timeout: client.DefaultTimeout}
 	global := flag.NewFlagSet("tasks", flag.ContinueOnError)
@@ -136,6 +157,7 @@ func ParseRequest(args []string) (Request, error) {
 	return Request{Settings: settings, Command: command}, nil
 }
 
+// Run executes one parsed command and returns the stable process exit code.
 func Run(args []string, factory Factory, stdout, stderr io.Writer) int {
 	request, err := ParseRequest(args)
 	if err != nil {
@@ -178,6 +200,8 @@ func Run(args []string, factory Factory, stdout, stderr io.Writer) int {
 	default:
 		err = errors.New("unknown parsed command")
 	}
+	// The CLI owns the transport produced by factory, so it closes it on both
+	// successful and failed requests before rendering the final result.
 	if closer, ok := transport.(interface{ Close() error }); ok {
 		if closeErr := closer.Close(); closeErr != nil {
 			fmt.Fprintln(stderr, "transport: request failed")
@@ -217,6 +241,7 @@ func jsonOutput(output any) any {
 	}
 }
 
+// Main is the reusable command entry point for thin executable wrappers.
 func Main(args []string, factory Factory, stdout, stderr io.Writer) int {
 	return Run(args, factory, stdout, stderr)
 }

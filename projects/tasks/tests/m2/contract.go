@@ -59,6 +59,8 @@ func Run(t *testing.T, extension string, factory Factory) {
 		}
 		assertIDs(t, got, second.ID)
 
+		// A pointer distinguishes an explicit false update from an omitted
+		// field; repositories must not collapse those two requests.
 		explicitFalse, err := repository.Update(ctx, second.ID, task.UpdateInput{Completed: &incomplete})
 		if err != nil {
 			t.Fatalf("Update(false): %v", err)
@@ -117,6 +119,8 @@ func Run(t *testing.T, extension string, factory Factory) {
 	})
 
 	t.Run("restart and ID non-reuse", func(t *testing.T) {
+		// Persisting only live rows is insufficient: the next ID must also
+		// survive deletion and restart so identifiers are never reused.
 		path := filepath.Join(t.TempDir(), "tasks"+extension)
 		repository, cleanup, err := factory(path)
 		if err != nil {
@@ -169,6 +173,8 @@ func Run(t *testing.T, extension string, factory Factory) {
 	})
 
 	t.Run("concurrent creates", func(t *testing.T) {
+		// Competing writers must still produce one gap-free ID sequence and a
+		// deterministic ascending List result.
 		repository, cleanup := open(t, extension, factory)
 		defer cleanup()
 		const count = 24
@@ -210,6 +216,8 @@ func Run(t *testing.T, extension string, factory Factory) {
 	})
 
 	t.Run("canceled contexts", func(t *testing.T) {
+		// Cancellation is part of the repository boundary: no operation may
+		// mutate persisted state after receiving an already-canceled context.
 		repository, cleanup := open(t, extension, factory)
 		defer cleanup()
 		existing := create(t, context.Background(), repository, "existing")

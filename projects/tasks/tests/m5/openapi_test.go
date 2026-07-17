@@ -27,6 +27,8 @@ import (
 
 func TestOpenAPIDocumentIsLocalValidAndComplete(t *testing.T) {
 	document, content := loadOpenAPI(t)
+	// The course must remain runnable offline, so the contract cannot depend on
+	// schemas fetched from a network during validation.
 	for _, line := range strings.Split(string(content), "\n") {
 		line = strings.TrimSpace(line)
 		if strings.HasPrefix(line, "$ref:") && !strings.Contains(line, `"#/`) {
@@ -128,6 +130,8 @@ func TestRepresentativeServerTrafficValidatesAgainstOpenAPI(t *testing.T) {
 		{"chi", apichi.New},
 		{"gin", apigin.New},
 	}
+	// Validate the same exchanges through every adapter so a framework-specific
+	// response cannot drift from the published contract unnoticed.
 	for _, factory := range factories {
 		t.Run(factory.name, func(t *testing.T) {
 			handler := factory.new(&memoryService{}, logger)

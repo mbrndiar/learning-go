@@ -16,8 +16,10 @@ import (
 	"github.com/mbrndiar/learning-go/projects/tasks/solution/task"
 )
 
+// ClientFactory constructs one concrete transport for the shared contract.
 type ClientFactory func(client.Config) (client.Transport, error)
 
+// AssertClientContract verifies transport-independent request and response behavior.
 func AssertClientContract(t *testing.T, factory ClientFactory) {
 	t.Helper()
 	t.Run("request construction and reusable transport", func(t *testing.T) {
@@ -59,6 +61,8 @@ func AssertClientContract(t *testing.T, factory ClientFactory) {
 	})
 
 	t.Run("strict response validation", func(t *testing.T) {
+		// A high-level client must reject protocol drift instead of returning
+		// partially decoded domain values that appear successful.
 		cases := []struct {
 			name, contentType, body string
 			status                  int
@@ -126,6 +130,8 @@ func AssertClientContract(t *testing.T, factory ClientFactory) {
 	})
 
 	t.Run("list order shape and exact 204", func(t *testing.T) {
+		// Ordering is observable client behavior, while DELETE's 204 contract
+		// forbids both a body and a Content-Type header.
 		listBodies := []string{
 			validTask,
 			`[{"id":2,"title":"second","completed":false},{"id":1,"title":"first","completed":false}]`,
@@ -157,6 +163,8 @@ func AssertClientContract(t *testing.T, factory ClientFactory) {
 	})
 
 	t.Run("response limit and retries disabled", func(t *testing.T) {
+		// A single command performs a single bounded exchange; automatic
+		// retries would hide duplicate requests and change failure semantics.
 		server := responseServer(200, "application/json", strings.Repeat(" ", (1<<20)+1))
 		transport := newTransport(t, factory, server.URL, time.Second)
 		_, err := transport.List(context.Background(), task.ListFilter{})
@@ -183,6 +191,9 @@ func AssertClientContract(t *testing.T, factory ClientFactory) {
 	})
 
 	t.Run("connection context and finite timeout", func(t *testing.T) {
+		// Concrete transports may expose different errors internally, but the
+		// public boundary must preserve timeout identity and classify all
+		// connection or cancellation failures consistently.
 		listener, err := net.Listen("tcp", "127.0.0.1:0")
 		if err != nil {
 			t.Fatal(err)

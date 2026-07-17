@@ -1,4 +1,6 @@
 // Package task defines the storage- and transport-independent project boundary.
+// Learner placeholders expose the required contracts; detailed invariants live
+// in projects/tasks/docs/SPEC.md.
 package task
 
 import (
@@ -147,67 +149,76 @@ func NewService(repository Repository) *Service {
 	return &Service{repository: repository}
 }
 
-// Create is an exercise placeholder.
+// Create validates input, persists a task through repository, and returns
+// the stored Task.
 func (s *Service) Create(ctx context.Context, input CreateInput) (Task, error) {
 	return Task{}, ErrNotImplemented
 }
 
-// List is an exercise placeholder.
+// List validates filter and returns matching tasks ordered by ID.
 func (s *Service) List(ctx context.Context, filter ListFilter) ([]Task, error) {
 	return nil, ErrNotImplemented
 }
 
-// Get is an exercise placeholder.
+// Get validates id and returns the matching task, or a NotFoundError.
 func (s *Service) Get(ctx context.Context, id int64) (Task, error) {
 	return Task{}, ErrNotImplemented
 }
 
-// Update is an exercise placeholder.
+// Update validates id and input, applies the present fields, and returns the
+// updated task.
 func (s *Service) Update(ctx context.Context, id int64, input UpdateInput) (Task, error) {
 	return Task{}, ErrNotImplemented
 }
 
-// Delete is an exercise placeholder.
+// Delete validates id and removes the matching task.
 func (s *Service) Delete(ctx context.Context, id int64) error {
 	return ErrNotImplemented
 }
 
-// NormalizeTitle is an exercise placeholder.
+// NormalizeTitle trims title and returns it if it then satisfies the Task
+// title contract, or a *ValidationError otherwise.
 func NormalizeTitle(title string) (string, error) {
 	return "", ErrNotImplemented
 }
 
-// ValidateTitle is an exercise placeholder.
+// ValidateTitle reports whether title already satisfies the Task title
+// contract without normalizing it.
 func ValidateTitle(title string) error {
 	return ErrNotImplemented
 }
 
-// ValidateID is an exercise placeholder.
+// ValidateID reports whether id is a valid positive task identifier.
 func ValidateID(id int64) error {
 	return ErrNotImplemented
 }
 
-// NormalizeUpdate is an exercise placeholder.
+// NormalizeUpdate normalizes the fields present in input and returns the
+// result if the update as a whole satisfies the Task update contract.
 func NormalizeUpdate(input UpdateInput) (UpdateInput, error) {
 	return UpdateInput{}, ErrNotImplemented
 }
 
-// ValidateUpdate is an exercise placeholder.
+// ValidateUpdate reports whether the fields present in input already satisfy
+// the Task update contract without normalizing them.
 func ValidateUpdate(input UpdateInput) error {
 	return ErrNotImplemented
 }
 
-// NormalizeListFilter is an exercise placeholder.
+// NormalizeListFilter normalizes filter and returns the result if it
+// satisfies the Task filter contract.
 func NormalizeListFilter(filter ListFilter) (ListFilter, error) {
 	return ListFilter{}, ErrNotImplemented
 }
 
-// ValidateListFilter is an exercise placeholder.
+// ValidateListFilter reports whether filter already satisfies the Task
+// filter contract without normalizing it.
 func ValidateListFilter(filter ListFilter) error {
 	return ErrNotImplemented
 }
 
-// ValidateTask is an exercise placeholder.
+// ValidateTask reports whether a fully constructed Task satisfies the
+// invariants a repository is allowed to rely on.
 func ValidateTask(value Task) error {
 	return ErrNotImplemented
 }

@@ -1,4 +1,6 @@
-// Package server composes Task services, storage, HTTP adapters, and lifecycle.
+// Package server is the composition root for Task API processes. It selects
+// concrete storage and HTTP adapters, owns their cleanup, and coordinates the
+// listening server's lifecycle.
 package server
 
 import (
@@ -21,10 +23,13 @@ import (
 )
 
 var (
+	// ErrInvalidConfig identifies unsupported or unsafe server configuration.
 	ErrInvalidConfig = errors.New("task server: invalid configuration")
-	ErrLifecycle     = errors.New("task server: lifecycle failure")
+	// ErrLifecycle identifies listener, serving, shutdown, or close failures.
+	ErrLifecycle = errors.New("task server: lifecycle failure")
 )
 
+// Config selects adapters and defines the HTTP server's lifecycle limits.
 type Config struct {
 	Server            string
 	Backend           string
@@ -38,6 +43,7 @@ type Config struct {
 	ShutdownTimeout   time.Duration
 }
 
+// DefaultConfig returns the local-learning defaults used by tasks-api.
 func DefaultConfig() Config {
 	return Config{
 		Server: "nethttp", Backend: "sqlite", Data: "tasks.db", Host: "127.0.0.1", Port: 8000,
@@ -49,6 +55,7 @@ func DefaultConfig() Config {
 	}
 }
 
+// Validate applies defaults and rejects unsupported or unsafe server settings.
 func (config Config) Validate() (Config, error) {
 	if config.Server == "" {
 		config.Server = "nethttp"
@@ -75,6 +82,7 @@ func (config Config) Validate() (Config, error) {
 	return config, nil
 }
 
+// Server owns one listener and the HTTP server that serves it.
 type Server struct {
 	listener net.Listener
 	http     *http.Server
@@ -83,6 +91,7 @@ type Server struct {
 	served   bool
 }
 
+// New opens a listener and constructs a server that owns it.
 func New(config Config, handler http.Handler) (*Server, error) {
 	validated, err := config.Validate()
 	if err != nil {
@@ -100,6 +109,8 @@ func New(config Config, handler http.Handler) (*Server, error) {
 	return server, nil
 }
 
+// NewWithListener constructs a server around a caller-provided listener.
+// Once construction succeeds, Server owns the listener lifecycle.
 func NewWithListener(config Config, listener net.Listener, handler http.Handler) (*Server, error) {
 	validated, err := config.Validate()
 	if err != nil {
@@ -121,6 +132,7 @@ func NewWithListener(config Config, listener net.Listener, handler http.Handler)
 	}, nil
 }
 
+// Addr returns the bound listener address.
 func (server *Server) Addr() net.Addr {
 	if server == nil || server.listener == nil {
 		return nil
@@ -128,6 +140,11 @@ func (server *Server) Addr() net.Addr {
 	return server.listener.Addr()
 }
 
+// Serve runs the server once and performs graceful shutdown when ctx is canceled.
+// The serve goroutine reports through a buffered channel so it can finish even
+// if cancellation wins the select. Shutdown uses a fresh context because the
+// triggering context is already canceled, then Serve drains the goroutine before
+// returning so no listener work remains in the background.
 func (server *Server) Serve(ctx context.Context) error {
 	if ctx == nil {
 		return fmt.Errorf("%w: context is required", ErrLifecycle)
@@ -152,6 +169,8 @@ func (server *Server) Serve(ctx context.Context) error {
 		}
 		return fmt.Errorf("%w: serve: %v", ErrLifecycle, err)
 	case <-ctx.Done():
+		// Graceful shutdown needs its own finite lifetime after the parent
+		// context has signaled that serving should stop.
 		shutdownContext, cancel := context.WithTimeout(context.Background(), server.shutdown)
 		shutdownErr := server.http.Shutdown(shutdownContext)
 		cancel()
@@ -167,6 +186,7 @@ func (server *Server) Serve(ctx context.Context) error {
 	}
 }
 
+// Close immediately closes the HTTP server and its listener.
 func (server *Server) Close() error {
 	if server == nil || server.http == nil {
 		return nil
@@ -177,6 +197,7 @@ func (server *Server) Close() error {
 	return nil
 }
 
+// Run selects adapters, owns their resources, and serves until ctx is canceled.
 func Run(ctx context.Context, config Config, logger *slog.Logger) error {
 	validated, err := config.Validate()
 	if err != nil {

@@ -1,2 +1,3 @@
-// Package m5 tests Gin, OpenAPI parity, and full interoperability.
+// Package m5 extends the shared server contract with framework normalization,
+// panic recovery, OpenAPI parity, and full client/server interoperability.
 package m5

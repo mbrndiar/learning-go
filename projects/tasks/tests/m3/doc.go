@@ -1,2 +1,3 @@
-// Package m3 tests the standard-library server and client.
+// Package m3 provides the standard-library HTTP milestone contract and shared
+// response assertions used by later server adapters.
 package m3

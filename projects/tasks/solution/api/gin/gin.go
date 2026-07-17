@@ -10,21 +10,34 @@ import (
 	"github.com/mbrndiar/learning-go/projects/tasks/solution/api"
 )
 
+// Handler serves the Task HTTP contract through a Gin engine.
 type Handler struct {
 	service api.Service
 	logger  *slog.Logger
 	engine  *ginlib.Engine
 }
 
+// New constructs the strict Task HTTP adapter implemented with Gin.
 func New(service api.Service, logger *slog.Logger) http.Handler {
 	if logger == nil {
 		logger = slog.Default()
 	}
 	handler := &Handler{service: service, logger: logger, engine: ginlib.New()}
+	// Gin normally redirects trailing-slash and case/cleaned-path variants
+	// (e.g. "/tasks/" -> "/tasks") with a 3xx. Redirects are not part of the
+	// project's HTTP contract, so all three are disabled and such requests
+	// fall through to NoRoute's 404 instead.
 	handler.engine.RedirectTrailingSlash = false
 	handler.engine.RedirectFixedPath = false
 	handler.engine.RemoveExtraSlash = false
+	// Without this, Gin answers 404 for a registered path with a method it
+	// doesn't recognize instead of running NoMethod below, so unsupported
+	// methods would be indistinguishable from unknown routes.
 	handler.engine.HandleMethodNotAllowed = true
+	// gin.New() (rather than gin.Default()) skips Gin's built-in
+	// Logger/Recovery middleware, which write plain-text output; this
+	// custom recovery instead logs via slog and renders the shared JSON
+	// error envelope, matching the other adapters.
 	handler.engine.Use(handler.recovery())
 
 	handler.engine.GET("/health", handler.health)
@@ -40,6 +53,9 @@ func New(service api.Service, logger *slog.Logger) http.Handler {
 		api.WriteError(context.Writer, api.RouteNotFound())
 	})
 	handler.engine.NoMethod(func(context *ginlib.Context) {
+		// allowedMethods recomputes the Allow set from the fixed route
+		// table because Gin's NoMethod handler isn't given the methods
+		// registered for the matched path.
 		allow := allowedMethods(context.Request.URL.Path)
 		if allow == "" {
 			api.WriteError(context.Writer, api.RouteNotFound())
@@ -51,6 +67,7 @@ func New(service api.Service, logger *slog.Logger) http.Handler {
 	return handler
 }
 
+// ServeHTTP dispatches a request through the configured Gin engine.
 func (h *Handler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	h.engine.ServeHTTP(writer, request)
 }
@@ -64,6 +81,9 @@ func (h *Handler) recovery() ginlib.HandlerFunc {
 					"stack", string(debug.Stack()),
 				)
 				context.Abort()
+				// Gin's ResponseWriter already tracks whether a response
+				// was started (Written()), unlike net/http's, so no custom
+				// wrapper is needed here as in the nethttp/chi adapters.
 				if !context.Writer.Written() {
 					clearHeaders(context.Writer.Header())
 					api.WriteError(context.Writer, nil)

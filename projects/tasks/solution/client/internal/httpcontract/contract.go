@@ -1,5 +1,6 @@
-// Package httpcontract contains the strict HTTP response policy shared by
-// concrete Task client libraries.
+// Package httpcontract contains the strict HTTP policy shared by concrete Task
+// clients. Keeping validation here prevents the net/http and Resty transports
+// from accepting different wire behavior.
 package httpcontract
 
 import (
@@ -19,8 +20,10 @@ import (
 	"github.com/mbrndiar/learning-go/projects/tasks/solution/task"
 )
 
+// MaxResponseBytes bounds every response before JSON decoding.
 const MaxResponseBytes = 1 << 20
 
+// BuildURL appends escaped path segments without discarding a base path.
 func BuildURL(baseURL string, segments []string, query url.Values) (string, error) {
 	base, err := url.Parse(baseURL)
 	if err != nil {
@@ -38,10 +41,12 @@ func BuildURL(baseURL string, segments []string, query url.Values) (string, erro
 	return base.String(), nil
 }
 
+// EncodeJSON encodes one request body using the shared wire representation.
 func EncodeJSON(value any) ([]byte, error) {
 	return json.Marshal(value)
 }
 
+// ReadResponse validates status, headers, size, JSON shape, and target data.
 func ReadResponse(
 	status int,
 	headers http.Header,
@@ -84,6 +89,7 @@ func ReadResponse(
 	return nil
 }
 
+// ConnectionFailure removes transport-specific details while preserving timeout identity.
 func ConnectionFailure(err error) error {
 	if errors.Is(err, context.DeadlineExceeded) {
 		return &client.ConnectionError{Err: context.DeadlineExceeded}
@@ -190,6 +196,8 @@ func decodeAPIError(status int, body []byte) error {
 }
 
 func validErrorCode(status int, code string) bool {
+	// A known status with the wrong code is a protocol violation, not a valid
+	// API error. Keep this mapping aligned with the OpenAPI error responses.
 	expected := map[int]string{
 		400: "invalid_json", 404: "not_found", 405: "method_not_allowed",
 		422: "validation_error", 500: "internal_error",
@@ -203,6 +211,8 @@ func decodeStrict(body []byte, target any) error {
 	if err := decoder.Decode(target); err != nil {
 		return err
 	}
+	// A second decode must reach EOF; otherwise the body contains another JSON
+	// value after the expected document.
 	if decoder.Decode(new(any)) != io.EOF {
 		return errors.New("trailing JSON value")
 	}

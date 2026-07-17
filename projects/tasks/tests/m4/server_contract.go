@@ -16,8 +16,10 @@ import (
 	"github.com/mbrndiar/learning-go/projects/tasks/tests/m3"
 )
 
+// ServerFactory constructs one HTTP adapter around the shared service boundary.
 type ServerFactory func(api.Service, *slog.Logger) http.Handler
 
+// AssertServerContract verifies behavior that must not vary by HTTP framework.
 func AssertServerContract(t *testing.T, factory ServerFactory) {
 	t.Helper()
 	t.Run("CRUD filter and no content", func(t *testing.T) {
@@ -73,6 +75,8 @@ func AssertServerContract(t *testing.T, factory ServerFactory) {
 	})
 
 	t.Run("query path method and route policy", func(t *testing.T) {
+		// Framework conveniences such as path cleanup, implicit HEAD handling,
+		// or redirects must not change the explicit route contract.
 		handler := factory(&memoryService{}, discardLogger())
 		requestCases := []struct{ path, message, field string }{
 			{"/tasks?completed=True", "completed filter must be true or false", "completed"},
@@ -109,6 +113,8 @@ func AssertServerContract(t *testing.T, factory ServerFactory) {
 	})
 
 	t.Run("internal failures are logged and sanitized", func(t *testing.T) {
+		// Internal diagnostics belong in logs; the wire response is stable and
+		// must never reveal repository or framework details.
 		var logs bytes.Buffer
 		handler := factory(&memoryService{err: errors.New("private storage detail")},
 			slog.New(slog.NewTextHandler(&logs, nil)))

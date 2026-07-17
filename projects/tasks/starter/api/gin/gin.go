@@ -8,12 +8,17 @@ import (
 	"github.com/mbrndiar/learning-go/projects/tasks/starter/api"
 )
 
+// Handler routes Task HTTP requests through the Gin router.
 type Handler struct {
 	service api.Service
 	logger  *slog.Logger
 	engine  *ginlib.Engine
 }
 
+// New builds a Task Handler backed by service, using logger for boundary
+// failures. Registered routes currently point at a shared placeholder; each
+// must eventually reach the api package's decode, DTO, and error helpers
+// instead of reimplementing them.
 func New(service api.Service, logger *slog.Logger) http.Handler {
 	handler := &Handler{service: service, logger: logger, engine: ginlib.New()}
 	handler.engine.RedirectTrailingSlash = false
@@ -36,6 +41,7 @@ func New(service api.Service, logger *slog.Logger) http.Handler {
 	return handler
 }
 
+// ServeHTTP implements http.Handler by dispatching to the configured engine.
 func (h *Handler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	h.engine.ServeHTTP(writer, request)
 }

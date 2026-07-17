@@ -15,6 +15,7 @@ import (
 	"github.com/mbrndiar/learning-go/projects/tasks/solution/task"
 )
 
+// Client implements the Task transport contract with net/http.
 type Client struct {
 	baseURL *url.URL
 	http    *http.Client
@@ -22,6 +23,7 @@ type Client struct {
 
 var _ client.Transport = (*Client)(nil)
 
+// Close releases idle connections owned by the underlying HTTP transport.
 func (c *Client) Close() error {
 	if c != nil && c.http != nil {
 		c.http.CloseIdleConnections()
@@ -29,10 +31,14 @@ func (c *Client) Close() error {
 	return nil
 }
 
+// New constructs a Task transport with a contract-safe net/http client.
 func New(config client.Config) (*Client, error) {
 	return NewWithHTTPClient(config, nil)
 }
 
+// NewWithHTTPClient constructs a Task transport around httpClient.
+// When its timeout must be capped, the client value is copied so the caller's
+// configuration is not mutated. Other caller-supplied policies remain intact.
 func NewWithHTTPClient(config client.Config, httpClient *http.Client) (*Client, error) {
 	validated, err := config.Validate()
 	if err != nil {
@@ -45,6 +51,8 @@ func NewWithHTTPClient(config client.Config, httpClient *http.Client) (*Client, 
 	if httpClient == nil {
 		httpClient = &http.Client{
 			Timeout: validated.Timeout,
+			// Redirect responses are part of the API contract and must be
+			// validated rather than silently followed.
 			CheckRedirect: func(_ *http.Request, _ []*http.Request) error {
 				return http.ErrUseLastResponse
 			},
@@ -57,10 +65,12 @@ func NewWithHTTPClient(config client.Config, httpClient *http.Client) (*Client, 
 	return &Client{baseURL: baseURL, http: httpClient}, nil
 }
 
+// BuildURL appends escaped path segments and an encoded query to baseURL.
 func BuildURL(baseURL string, segments []string, query url.Values) (string, error) {
 	return httpcontract.BuildURL(baseURL, segments, query)
 }
 
+// Create sends one create request and validates the complete HTTP response.
 func (c *Client) Create(ctx context.Context, input task.CreateInput) (task.Task, error) {
 	var result task.Task
 	err := c.exchange(ctx, http.MethodPost, []string{"tasks"}, nil, map[string]any{"title": input.Title},
@@ -68,6 +78,7 @@ func (c *Client) Create(ctx context.Context, input task.CreateInput) (task.Task,
 	return result, err
 }
 
+// List returns tasks matching filter after validating response order and shape.
 func (c *Client) List(ctx context.Context, filter task.ListFilter) ([]task.Task, error) {
 	query := url.Values{}
 	if filter.Completed != nil {
@@ -82,6 +93,7 @@ func (c *Client) List(ctx context.Context, filter task.ListFilter) ([]task.Task,
 	return result, err
 }
 
+// Get returns one task or a typed API error.
 func (c *Client) Get(ctx context.Context, id int64) (task.Task, error) {
 	var result task.Task
 	err := c.exchange(ctx, http.MethodGet, []string{"tasks", strconv.FormatInt(id, 10)}, nil, nil,
@@ -89,6 +101,7 @@ func (c *Client) Get(ctx context.Context, id int64) (task.Task, error) {
 	return result, err
 }
 
+// Update applies the fields present in input and returns the resulting task.
 func (c *Client) Update(ctx context.Context, id int64, input task.UpdateInput) (task.Task, error) {
 	body := make(map[string]any)
 	if input.Title != nil {
@@ -103,6 +116,7 @@ func (c *Client) Update(ctx context.Context, id int64, input task.UpdateInput) (
 	return result, err
 }
 
+// Delete removes one task and requires an exact empty 204 response.
 func (c *Client) Delete(ctx context.Context, id int64) error {
 	return c.exchange(ctx, http.MethodDelete, []string{"tasks", strconv.FormatInt(id, 10)}, nil, nil,
 		http.StatusNoContent, map[int]bool{404: true, 405: true, 422: true, 500: true}, nil)

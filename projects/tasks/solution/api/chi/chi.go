@@ -9,17 +9,22 @@ import (
 	"github.com/mbrndiar/learning-go/projects/tasks/solution/api"
 )
 
+// Handler serves the Task HTTP contract through a Chi router.
 type Handler struct {
 	service api.Service
 	logger  *slog.Logger
 	router  chilib.Router
 }
 
+// New constructs the strict Task HTTP adapter implemented with Chi.
 func New(service api.Service, logger *slog.Logger) http.Handler {
 	if logger == nil {
 		logger = slog.Default()
 	}
 	handler := &Handler{service: service, logger: logger, router: chilib.NewRouter()}
+	// Chi's own middleware.Recoverer writes a plain-text 500 body; replace
+	// it so panics render the same JSON error envelope as every other
+	// failure path.
 	handler.router.Use(recovery(logger))
 	handler.router.Get("/health", handler.health)
 	handler.router.Get("/tasks", handler.list)
@@ -31,6 +36,9 @@ func New(service api.Service, logger *slog.Logger) http.Handler {
 		api.WriteError(writer, api.RouteNotFound())
 	})
 	handler.router.MethodNotAllowed(func(writer http.ResponseWriter, request *http.Request) {
+		// Chi's MethodNotAllowed handler is not given the set of methods
+		// registered for the matched path, so recompute it from the fixed
+		// route table below to populate the Allow header and error body.
 		allow := allowedMethods(request.URL.Path)
 		writer.Header().Set("Allow", allow)
 		api.WriteError(writer, api.MethodNotAllowed(allow))
@@ -38,6 +46,7 @@ func New(service api.Service, logger *slog.Logger) http.Handler {
 	return handler
 }
 
+// ServeHTTP dispatches a request through the configured Chi router.
 func (h *Handler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	h.router.ServeHTTP(writer, request)
 }
@@ -153,6 +162,8 @@ func recovery(logger *slog.Logger) func(http.Handler) http.Handler {
 						"panic", recovered,
 						"stack", string(debug.Stack()),
 					)
+					// Only fall back to a clean error body if downstream
+					// handlers had not already written a response.
 					if !state.written {
 						clearHeaders(state.Header())
 						api.WriteError(state, nil)
@@ -164,6 +175,10 @@ func recovery(logger *slog.Logger) func(http.Handler) http.Handler {
 	}
 }
 
+// responseState wraps http.ResponseWriter to record whether a response has
+// already been started, since ResponseWriter itself exposes no way to ask.
+// recovery needs this to know whether it is still safe to clear headers and
+// write a fresh error body after a panic.
 type responseState struct {
 	http.ResponseWriter
 	written bool

@@ -32,7 +32,8 @@ type Config struct {
 	Timeout time.Duration
 }
 
-// Validate is an exercise placeholder.
+// Validate normalizes and checks Config, returning a *ConfigError for the
+// first invalid field.
 func (c Config) Validate() (Config, error) {
 	return Config{}, task.ErrNotImplemented
 }
@@ -146,7 +147,8 @@ func (e *ConfigError) Unwrap() error {
 	return ErrInvalidConfiguration
 }
 
-// NormalizeBaseURL is an exercise placeholder.
+// NormalizeBaseURL validates raw as an absolute HTTP(S) URL and returns its
+// canonical form, or a *ConfigError.
 func NormalizeBaseURL(raw string) (string, error) {
 	return "", task.ErrNotImplemented
 }

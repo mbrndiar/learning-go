@@ -40,6 +40,63 @@ projects/tasks/{starter,solution}/
 └── cmd/{tasks-api,tasks}/      thin executable entry points
 ```
 
+### Where to start
+
+Start learning in [`starter/`](starter/). It is the project entry point for
+milestone work: begin with the domain in `starter/task`, then follow the five
+milestones into persistence, servers, clients, and interoperability. Use
+[`solution/`](solution/) only as the reference implementation after attempting
+the corresponding starter milestone.
+
+The runtime entry points are separate from that learning path:
+
+- `cmd/tasks-api` selects a persistence backend and HTTP adapter, then delegates
+  composition and lifecycle to `server`.
+- `cmd/tasks` selects an HTTP client transport, then delegates command parsing,
+  output, and exit-code policy to `cli`.
+
+`starter` and `solution` do not import or share production implementations. They
+mirror the same exported boundaries, and the root
+[`boundary_test.go`](boundary_test.go) verifies that those surfaces remain
+aligned. Starter placeholders may have fewer imports until their milestone is
+implemented, but their target dependency direction is the same as the solution.
+
+### Package dependencies and shared boundaries
+
+Arrows below mean "imports or delegates to" in the complete solution and in a
+starter tree after the corresponding milestones are implemented:
+
+```text
+cmd/tasks
+  ├──> cli ──> client ──> task
+  │      └────────────────> task
+  ├──> client/nethttp ──> client + task + client/internal/httpcontract
+  └──> client/resty   ──> client + task + client/internal/httpcontract
+
+cmd/tasks-api ──> server
+                  ├──> api/{nethttp,chi,gin} ──> api ──> task
+                  ├──> storage/{sqlite,markdown} ──────> task
+                  └────────────────────────────────────> task
+```
+
+| Folder | Direct project dependencies | Used by | Shared responsibility |
+| --- | --- | --- | --- |
+| `task` | None | Storage, API, clients, CLI, and server composition | Domain values, errors, repository boundary, and service |
+| `api` | `task` | All three API adapters | Transport-neutral DTOs, decoding, error mapping, and JSON responses |
+| `api/{nethttp,chi,gin}` | `api` | `server` | Framework-specific routing and recovery for one HTTP contract |
+| `storage/{sqlite,markdown}` | `task` | `server` | Alternative implementations of one repository contract |
+| `client` | `task` | CLI, both client transports, and `cmd/tasks` | Client configuration, transport interface, and error types |
+| `client/internal/httpcontract` | `client`, `task` | Both solution client transports | Strict URL, response, and protocol validation |
+| `client/{nethttp,resty}` | `client`, `task`, shared HTTP contract in the solution | Solution `cmd/tasks` and interoperability tests; target wiring for the starter | Alternative implementations of one remote client contract |
+| `cli` | `client`, `task` | `cmd/tasks` | Command parsing, JSON output, transport-independent behavior, and exit codes |
+| `server` | API adapters, storage adapters, `task` | `cmd/tasks-api` | Backend/framework selection, resource ownership, and HTTP lifecycle |
+
+The [`tests/`](tests/) packages are reusable contracts rather than a third
+implementation. Milestone 1 assertions are imported by both starter and
+solution tests. Later milestone contracts are reused across the solution's
+alternative repositories, servers, and clients, while the root boundary test
+compares starter and solution as a whole.
+
 Dependencies point inward. `task` must not import an HTTP framework or client
 library. Storage adapters depend on the domain boundary. API adapters translate
 HTTP into service operations. Client transports implement the same remote

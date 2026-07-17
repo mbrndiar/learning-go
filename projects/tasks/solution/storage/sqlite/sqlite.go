@@ -48,6 +48,9 @@ func Open(path string) (*Repository, error) {
 	if err != nil {
 		return nil, task.WrapStorage("open sqlite", err)
 	}
+	// Cap the pool at one connection: modernc.org/sqlite serializes access
+	// per connection, and concurrent connections to the same file risk
+	// SQLITE_BUSY errors despite the busy_timeout pragma.
 	db.SetMaxOpenConns(1)
 	db.SetMaxIdleConns(1)
 
@@ -89,6 +92,11 @@ func (r *Repository) initialize(ctx context.Context) error {
 		return task.WrapStorage("initialize sqlite schema", err)
 	}
 
+	// A pre-existing database file may already define a "tasks" table with
+	// an incompatible shape (e.g. missing columns or constraints). Read back
+	// its actual definition and compare it against the schema this package
+	// expects, rather than trusting that CREATE TABLE IF NOT EXISTS succeeded
+	// against a matching table.
 	var statement string
 	err := r.db.QueryRowContext(ctx, `
 		SELECT sql
@@ -280,6 +288,8 @@ func boolInteger(value bool) int {
 	return 0
 }
 
+// canonicalSQL strips whitespace, semicolons, and case so that equivalent
+// but differently formatted CREATE TABLE statements compare as equal.
 func canonicalSQL(value string) string {
 	return strings.Map(func(r rune) rune {
 		if unicode.IsSpace(r) || r == ';' {

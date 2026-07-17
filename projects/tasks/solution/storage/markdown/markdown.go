@@ -261,6 +261,10 @@ func (r *Repository) save(value document) (err error) {
 	content := serialize(value)
 	directory := filepath.Dir(r.path)
 	base := filepath.Base(r.path)
+	// Write to a hidden temp file in the same directory as r.path, then
+	// rename it into place. Same-directory placement guarantees the temp
+	// file and the destination share a filesystem, so the rename below is
+	// atomic and readers never observe a partially written document.
 	temporary, err := os.CreateTemp(directory, "."+base+".tmp-*")
 	if err != nil {
 		return err
@@ -280,6 +284,9 @@ func (r *Repository) save(value document) (err error) {
 	if _, err = temporary.WriteString(content); err != nil {
 		return err
 	}
+	// Flush the temp file's contents to stable storage before the rename,
+	// so the rename can never point the destination name at a file whose
+	// data has not actually survived a crash.
 	if err = temporary.Sync(); err != nil {
 		return err
 	}
@@ -291,6 +298,9 @@ func (r *Repository) save(value document) (err error) {
 	if err = os.Rename(temporaryPath, r.path); err != nil {
 		return err
 	}
+	// The rename itself must also be durable: on crash, a directory entry
+	// update that was never synced can revert, leaving the old file (or
+	// nothing) in place. Sync the containing directory to persist it.
 	return syncDirectory(directory)
 }
 

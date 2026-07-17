@@ -20,8 +20,14 @@ import (
 	"github.com/mbrndiar/learning-go/projects/tasks/solution/task"
 )
 
+// MaxBodyBytes bounds decoded request bodies; decodeObject reads one byte
+// past this limit so oversized bodies are rejected instead of silently
+// truncated.
 const MaxBodyBytes = 1 << 20
 
+// Service is the transport-neutral boundary every adapter (nethttp, chi,
+// gin, ...) depends on. Adapters use it instead of depending on a concrete
+// task.Service or repository implementation.
 type Service interface {
 	Create(context.Context, task.CreateInput) (task.Task, error)
 	List(context.Context, task.ListFilter) ([]task.Task, error)
@@ -30,22 +36,29 @@ type Service interface {
 	Delete(context.Context, int64) error
 }
 
+// Task is the wire shape of a task, produced from the domain value by
+// TaskDTO/TaskDTOs so adapters never serialize task.Task directly.
 type Task struct {
 	ID        int64  `json:"id"`
 	Title     string `json:"title"`
 	Completed bool   `json:"completed"`
 }
 
+// Error is the wire shape of one error inside an ErrorEnvelope.
 type Error struct {
 	Code    string         `json:"code"`
 	Message string         `json:"message"`
 	Details map[string]any `json:"details,omitempty"`
 }
 
+// ErrorEnvelope is the single JSON error shape returned by every adapter.
 type ErrorEnvelope struct {
 	Error Error `json:"error"`
 }
 
+// HTTPError pairs an HTTP status with a machine-readable code and message so
+// adapters can render any failure (decode, validation, domain, or panic)
+// through the one WriteError path without knowing why it occurred.
 type HTTPError struct {
 	Status  int
 	Code    string
@@ -53,6 +66,8 @@ type HTTPError struct {
 	Details map[string]any
 }
 
+// Error implements the error interface. It tolerates a nil receiver so a
+// nil *HTTPError can still be passed through error-returning code paths.
 func (e *HTTPError) Error() string {
 	if e == nil {
 		return "HTTP boundary error"
@@ -60,10 +75,13 @@ func (e *HTTPError) Error() string {
 	return e.Message
 }
 
+// TaskDTO converts one domain task to its wire representation.
 func TaskDTO(value task.Task) Task {
 	return Task{ID: value.ID, Title: value.Title, Completed: value.Completed}
 }
 
+// TaskDTOs converts a slice of domain tasks to their wire representation,
+// preserving order.
 func TaskDTOs(values []task.Task) []Task {
 	result := make([]Task, len(values))
 	for index, value := range values {
@@ -72,6 +90,8 @@ func TaskDTOs(values []task.Task) []Task {
 	return result
 }
 
+// ValidateNoQuery rejects any query parameter for endpoints that accept
+// none, so adapters do not need a per-endpoint allowlist for query keys.
 func ValidateNoQuery(query url.Values) *HTTPError {
 	if len(query) == 0 {
 		return nil
@@ -80,6 +100,9 @@ func ValidateNoQuery(query url.Values) *HTTPError {
 	return validation(keys[0], "unknown query parameter: "+keys[0])
 }
 
+// ParseListFilter validates the /tasks query string and translates it into
+// a domain filter, rejecting any key other than completed or a value other
+// than the literal strings "true"/"false".
 func ParseListFilter(query url.Values) (task.ListFilter, *HTTPError) {
 	for _, key := range sortedKeys(query) {
 		if key != "completed" {
@@ -97,6 +120,9 @@ func ParseListFilter(query url.Values) (task.ListFilter, *HTTPError) {
 	return task.ListFilter{Completed: &completed}, nil
 }
 
+// ParseID validates a path ID as a base-10 positive integer so every
+// adapter rejects the same malformed IDs the same way, independent of each
+// router's own path-value extraction.
 func ParseID(raw string) (int64, *HTTPError) {
 	if raw == "" {
 		return 0, validation("id", "task ID must be a positive integer")
@@ -113,6 +139,9 @@ func ParseID(raw string) (int64, *HTTPError) {
 	return id, nil
 }
 
+// DecodeCreate decodes and validates a create request body, sharing one
+// strict JSON object decoder (reject unknown/duplicate keys, wrong types,
+// null) across every adapter.
 func DecodeCreate(request *http.Request) (task.CreateInput, *HTTPError) {
 	object, boundaryError := decodeObject(request)
 	if boundaryError != nil {
@@ -136,6 +165,8 @@ func DecodeCreate(request *http.Request) (task.CreateInput, *HTTPError) {
 	return task.CreateInput{Title: normalized}, nil
 }
 
+// DecodeUpdate decodes and validates a partial update request body using
+// the same strict object decoder as DecodeCreate.
 func DecodeUpdate(request *http.Request) (task.UpdateInput, *HTTPError) {
 	object, boundaryError := decodeObject(request)
 	if boundaryError != nil {
@@ -166,12 +197,18 @@ func DecodeUpdate(request *http.Request) (task.UpdateInput, *HTTPError) {
 	return normalized, nil
 }
 
+// WriteJSON encodes value as the JSON response body with the given status,
+// centralizing the response Content-Type so every adapter's success and
+// error paths look identical on the wire.
 func WriteJSON(writer http.ResponseWriter, status int, value any) {
 	writer.Header().Set("Content-Type", "application/json; charset=utf-8")
 	writer.WriteHeader(status)
 	_ = json.NewEncoder(writer).Encode(value)
 }
 
+// WriteError renders a boundary error as the shared error envelope. A nil
+// boundaryError becomes a generic 500, which lets adapter-level panic
+// recovery call WriteError(writer, nil) without constructing an HTTPError.
 func WriteError(writer http.ResponseWriter, boundaryError *HTTPError) {
 	if boundaryError == nil {
 		boundaryError = &HTTPError{
@@ -185,6 +222,10 @@ func WriteError(writer http.ResponseWriter, boundaryError *HTTPError) {
 	}})
 }
 
+// MapError translates a domain/service error into the HTTPError an adapter
+// should render. Unrecognized errors are logged (if logger is non-nil) with
+// their original detail and reported to the client only as a sanitized 500,
+// so internals never leak through the wire.
 func MapError(err error, logger *slog.Logger) *HTTPError {
 	var validationError *task.ValidationError
 	switch {
@@ -210,6 +251,10 @@ func MapError(err error, logger *slog.Logger) *HTTPError {
 	}
 }
 
+// MethodNotAllowed builds the shared 405 error for a known path with an
+// unsupported method. allow is documentary only: it does not set the
+// response Allow header, so callers must still set that header themselves
+// before calling WriteError.
 func MethodNotAllowed(allow string) *HTTPError {
 	return &HTTPError{
 		Status: http.StatusMethodNotAllowed, Code: "method_not_allowed",
@@ -217,6 +262,7 @@ func MethodNotAllowed(allow string) *HTTPError {
 	}
 }
 
+// RouteNotFound builds the shared 404 error for an unknown route.
 func RouteNotFound() *HTTPError {
 	return &HTTPError{Status: http.StatusNotFound, Code: "not_found", Message: "route was not found"}
 }

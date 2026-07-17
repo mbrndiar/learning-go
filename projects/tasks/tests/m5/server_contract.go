@@ -16,13 +16,18 @@ import (
 	"github.com/mbrndiar/learning-go/projects/tasks/tests/m4"
 )
 
+// ServerFactory constructs an adapter for the extended Milestone 5 contract.
 type ServerFactory = m4.ServerFactory
 
+// AssertServerContract extends the common server contract with behavior that
+// framework defaults and middleware commonly alter.
 func AssertServerContract(t *testing.T, factory ServerFactory) {
 	t.Helper()
 	m4.AssertServerContract(t, factory)
 
 	t.Run("framework defaults are normalized", func(t *testing.T) {
+		// Chi and Gin provide automatic method and path behavior by default;
+		// every adapter must disable or replace it to match net/http exactly.
 		handler := factory(noopService{}, discardLogger())
 		methodCases := []struct {
 			method string
@@ -69,6 +74,8 @@ func AssertServerContract(t *testing.T, factory ServerFactory) {
 	})
 
 	t.Run("panics are logged and sanitized", func(t *testing.T) {
+		// Recovery is tested through every adapter because each framework owns
+		// a different middleware boundary where a panic could otherwise escape.
 		var logs bytes.Buffer
 		handler := factory(panicService{}, slog.New(slog.NewTextHandler(&logs, nil)))
 		response := serve(handler, http.MethodGet, "/tasks")

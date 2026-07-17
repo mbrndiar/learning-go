@@ -9,18 +9,24 @@ import (
 	"github.com/mbrndiar/learning-go/projects/tasks/solution/api"
 )
 
+// Handler serves the Task HTTP contract with the standard library router.
 type Handler struct {
 	service api.Service
 	logger  *slog.Logger
 	mux     *http.ServeMux
 }
 
+// New constructs the strict Task HTTP adapter implemented with net/http.
 func New(service api.Service, logger *slog.Logger) http.Handler {
 	if logger == nil {
 		logger = slog.Default()
 	}
 	handler := &Handler{service: service, logger: logger, mux: http.NewServeMux()}
 	handler.mux.HandleFunc("GET /health", handler.health)
+	// Go 1.22+ ServeMux treats a "GET pattern" as also matching HEAD, and
+	// the more specific "HEAD pattern" below overrides that so HEAD -- not
+	// part of the project's HTTP contract -- gets 405 like any other
+	// unsupported method instead of silently running the GET handler.
 	handler.mux.HandleFunc("HEAD /health", methodFallback("GET"))
 	handler.mux.HandleFunc("GET /tasks", handler.list)
 	handler.mux.HandleFunc("HEAD /tasks", methodFallback("GET, POST"))
@@ -29,6 +35,9 @@ func New(service api.Service, logger *slog.Logger) http.Handler {
 	handler.mux.HandleFunc("HEAD /tasks/{id}", methodFallback("GET, PATCH, DELETE"))
 	handler.mux.HandleFunc("PATCH /tasks/{id}", handler.update)
 	handler.mux.HandleFunc("DELETE /tasks/{id}", handler.delete)
+	// These method-less patterns are the catch-all for any other method on
+	// a known path (e.g. PUT /tasks): without them ServeMux would fall
+	// through to the "/" pattern and answer 404 instead of 405.
 	handler.mux.HandleFunc("/health", methodFallback("GET"))
 	handler.mux.HandleFunc("/tasks", methodFallback("GET, POST"))
 	handler.mux.HandleFunc("/tasks/{id}", methodFallback("GET, PATCH, DELETE"))
@@ -38,6 +47,7 @@ func New(service api.Service, logger *slog.Logger) http.Handler {
 	return handler
 }
 
+// ServeHTTP applies strict path handling and dispatches through the mux.
 func (h *Handler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	state := &responseState{ResponseWriter: writer}
 	defer func() {
@@ -46,12 +56,19 @@ func (h *Handler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 				"panic", recovered,
 				"stack", string(debug.Stack()),
 			)
+			// Only fall back to a clean error body if the handler had not
+			// already written a response; otherwise the client has already
+			// received a partial or committed response we cannot retract.
 			if !state.written {
 				clearHeaders(state.Header())
 				api.WriteError(state, nil)
 			}
 		}
 	}()
+	// ServeMux would otherwise redirect non-canonical paths (repeated
+	// slashes, "." or ".." segments) to a cleaned URL. Redirects are not
+	// part of the project's HTTP contract, so treat any such path as an
+	// unknown route instead of letting the mux issue a 3xx.
 	if request.URL.Path != "/" && path.Clean(request.URL.Path) != request.URL.Path {
 		api.WriteError(state, api.RouteNotFound())
 		return
@@ -156,6 +173,10 @@ func methodFallback(allow string) http.HandlerFunc {
 	}
 }
 
+// responseState wraps http.ResponseWriter to record whether a response has
+// already been started, since ResponseWriter itself exposes no way to ask.
+// The panic-recovery deferred in ServeHTTP needs this to know whether it is
+// still safe to clear headers and write a fresh error body.
 type responseState struct {
 	http.ResponseWriter
 	written bool
