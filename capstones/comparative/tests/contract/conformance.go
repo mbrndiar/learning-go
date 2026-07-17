@@ -244,6 +244,12 @@ func RunMilestone4(t *testing.T, program string) {
 }
 
 // RunMilestone5 validates the complete real-child-process scenario fixture.
+// Scenarios spawn real OS processes (the CLI under test and helper
+// subprocesses re-invoking this test binary) rather than goroutines, because
+// only distinct processes give independent process boundaries, their own
+// runtime and connection pools, and real exec/exit behavior, which is what
+// is needed to exercise genuine cross-process SQLite locking and
+// busy_timeout contention.
 func RunMilestone5(t *testing.T, program string) {
 	t.Helper()
 	fixture := readFixture(t, "fixtures/scenarios/multiprocess.json")
@@ -284,6 +290,12 @@ func RunProcessHelper() bool {
 	return true
 }
 
+// runActorHelper is the thin wrapper executed by the re-invoked test binary:
+// it signals readiness, blocks until the coordinator releases every actor at
+// once, and only then replaces itself with the real CLI. This lets
+// runParallelGroup start all actors as OS processes ahead of time and still
+// have them invoke the CLI simultaneously, so tests can assert on true
+// concurrent contention rather than on staggered process-launch timing.
 func runActorHelper() {
 	ready := requiredEnvironment("KV_HELPER_READY")
 	release := requiredEnvironment("KV_HELPER_RELEASE")
@@ -311,6 +323,12 @@ func runActorHelper() {
 	os.Exit(0)
 }
 
+// runLockHelper holds a real SQLite write lock in a separate process so the
+// CLI under test can be observed contending for it. All statements below run
+// on the same pinned *sql.Conn from db.Conn(), so BEGIN IMMEDIATE and the
+// later ROLLBACK are guaranteed to execute on the identical connection that
+// acquired the lock; SetMaxOpenConns(1) simply caps the pool so this helper
+// cannot open another, unneeded connection alongside it.
 func runLockHelper() {
 	database := requiredEnvironment("KV_HELPER_DATABASE")
 	ready := requiredEnvironment("KV_HELPER_READY")
@@ -332,12 +350,20 @@ func runLockHelper() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
+	// BEGIN IMMEDIATE acquires SQLite's write lock immediately (rather than
+	// deferring it to the first write), and is deliberately never committed:
+	// the transaction is held open until the coordinator sends the release
+	// signal, giving the test a deterministic window in which a contending
+	// process must observe busy_timeout behavior instead of racing to acquire
+	// the lock first.
 	if _, err := connection.ExecContext(context.Background(), `BEGIN IMMEDIATE`); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 	signalFile(ready)
 	waitForFileProcess(release, 30*time.Second)
+	// ROLLBACK (not COMMIT) releases the lock without persisting any change,
+	// since this transaction only ever existed to hold contention open.
 	if _, err := connection.ExecContext(context.Background(), `ROLLBACK`); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
@@ -781,6 +807,11 @@ func runMultiprocessScenario(t *testing.T, program string, scenario any) {
 	}
 
 	captures := make(map[string]any)
+	// locks and running track scenario-declared subprocesses by their fixture
+	// id so later operations (release_lock_helper, await_cli) can address a
+	// specific still-live process. The deferred terminate loop is a safety
+	// net for scenarios that fail mid-way; well-formed scenarios drain both
+	// maps themselves, which is asserted below.
 	locks := make(map[string]*runningProcess)
 	running := make(map[string]*runningProcess)
 	defer func() {
@@ -925,10 +956,18 @@ func runParallelGroup(t *testing.T, program, database, directory string, paralle
 		process.args = args
 		actors = append(actors, process)
 	}
+	// Wait for every actor to report readiness before releasing any of them:
+	// this is a barrier that guarantees all actor processes have already
+	// been spawned and are blocked immediately before their real exec, so
+	// signaling the single shared release file below causes them to race
+	// against each other for real rather than starting at staggered times.
 	for _, actor := range actors {
 		waitForFile(t, actor.readyPath, 15*time.Second)
 	}
 	releasedAt := time.Now()
+	// started is reset to the moment of release (not process spawn), so
+	// duration assertions measure the actual contended operation instead of
+	// including barrier wait time.
 	for _, actor := range actors {
 		actor.started = releasedAt
 	}
@@ -1213,11 +1252,19 @@ func startLockHelper(t *testing.T, database, directory, id string) *runningProce
 	process.releasePath = release
 	process.parseEnvelope = false
 	readyObserved := false
+	// If waitForFile below fails, t.Fatal unwinds this goroutine via
+	// Goexit, running this deferred cleanup while readyObserved is still
+	// false; once the ready file is actually seen we flip the flag so the
+	// helper (and its held lock) survives for the caller to use.
 	defer func() {
 		if !readyObserved {
 			process.terminate()
 		}
 	}()
+	// Blocking here until the ready file appears is what guarantees that,
+	// once this function returns, the helper's BEGIN IMMEDIATE has already
+	// succeeded and the lock is genuinely held: callers can rely on real
+	// contention rather than racing the helper to acquire the lock first.
 	waitForFile(t, ready, 15*time.Second)
 	readyObserved = true
 	return process
@@ -1232,11 +1279,19 @@ type runResult struct {
 }
 
 type runningProcess struct {
-	command       *exec.Cmd
-	stdoutPath    string
-	stderrPath    string
-	started       time.Time
-	finished      bool
+	command    *exec.Cmd
+	stdoutPath string
+	stderrPath string
+	started    time.Time
+	// finished guards against awaiting (finish) or reaping (terminate) the
+	// same OS process twice; both check/set it, and since startProgram
+	// registers terminate via t.Cleanup, an already-finished process is
+	// safely ignored by that deferred safety net.
+	finished bool
+	// readyPath/releasePath are only populated for helper subprocesses
+	// (actor/lock); a plain CLI run under runProgram/startProgram leaves
+	// them empty, and terminate tolerates that by discarding os.Remove's
+	// error on a nonexistent ("") path.
 	readyPath     string
 	releasePath   string
 	args          []string
@@ -2022,6 +2077,18 @@ func stringIndex(values []string, target string) int {
 	return -1
 }
 
+// waitForFile, waitForFileProcess, and signalFile implement the ready/release
+// handshake used to coordinate helper subprocesses. Because helpers run as
+// separate OS processes with no shared memory or channels, synchronization
+// has to be visible externally: a ready file's existence is the helper
+// proving (via the filesystem) that it has reached its blocking point —
+// e.g., the SQLite lock is actually held, or the actor is parked just before
+// its real exec — and a release file is the coordinator's one-shot signal to
+// proceed. Coordinators always wait for every helper's ready file before
+// creating a release file, which is what prevents start-order races: without
+// this handshake a helper could still be initializing (or not yet have
+// acquired its lock) when the "concurrent" operation it is supposed to race
+// against begins.
 func waitForFile(t *testing.T, path string, timeout time.Duration) {
 	t.Helper()
 	deadline := time.Now().Add(timeout)
@@ -2036,6 +2103,9 @@ func waitForFile(t *testing.T, path string, timeout time.Duration) {
 	}
 }
 
+// waitForFileProcess is the helper-subprocess counterpart to waitForFile: it
+// runs outside of any *testing.T, so on timeout it must report failure via
+// stderr/os.Exit rather than t.Fatalf.
 func waitForFileProcess(path string, timeout time.Duration) {
 	deadline := time.Now().Add(timeout)
 	for {
@@ -2050,6 +2120,9 @@ func waitForFileProcess(path string, timeout time.Duration) {
 	}
 }
 
+// signalFile creates path exactly once (O_EXCL), so a helper or coordinator
+// accidentally signaling the same handshake step twice fails loudly instead
+// of silently succeeding.
 func signalFile(path string) {
 	file, err := os.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o600)
 	if err != nil {

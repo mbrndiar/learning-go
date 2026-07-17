@@ -59,6 +59,9 @@ func run(ctx context.Context, args []string, opener storage.Opener) (any, error)
 	}
 	closeErr := store.Close()
 	if err != nil {
+		// The operation's own error always takes precedence: a close
+		// failure after a real operation failure would otherwise mask the
+		// more specific and actionable error with a less useful one.
 		return nil, err
 	}
 	if closeErr != nil {

@@ -13,22 +13,27 @@ import (
 
 const placeholderMessage = "TODO: implement monitor HTTP API"
 
+// State tracks whether the service is accepting normal API work.
 type State struct {
 	stopping atomic.Bool
 }
 
+// NewState constructs a running lifecycle state.
 func NewState() *State {
 	return &State{}
 }
 
+// Stop moves the service into its terminal stopping state.
 func (state *State) Stop() {
 	state.stopping.Store(true)
 }
 
+// Stopping reports whether shutdown has begun.
 func (state *State) Stopping() bool {
 	return state.stopping.Load()
 }
 
+// Options customizes the HTTP handler's observable dependencies.
 type Options struct {
 	HistoryLimit int
 	State        *State
@@ -37,10 +42,12 @@ type Options struct {
 
 type handler struct{}
 
+// NewHandler returns an ordinary http.Handler for the monitor API.
 func NewHandler(store history.Store, targets []domain.Target) http.Handler {
 	return NewHandlerWithOptions(store, targets, Options{})
 }
 
+// NewHandlerWithOptions returns a configured monitor API handler.
 func NewHandlerWithOptions(store history.Store, targets []domain.Target, options Options) http.Handler {
 	return &handler{}
 }

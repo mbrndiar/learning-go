@@ -34,6 +34,8 @@ const (
 	insertMetadata = `INSERT INTO store_metadata(singleton, schema_version, global_revision)
 VALUES (1, 1, 0)`
 
+	// Canonical fingerprints recognize legacy v0/v1 schemas independent of
+	// formatting; see canonicalSQL for the normalization they rely on.
 	v0EntriesCanonical  = "createtableentries(keytextprimarykeycollatebinary,value_jsontextnotnull)"
 	v1EntriesCanonical  = "createtableentries(keytextprimarykeycollatebinary,value_jsontextnotnullcheck(json_valid(value_json)),revisionintegernotnullcheck(revisionbetween1and9007199254740991))"
 	v1MetadataCanonical = "createtablestore_metadata(singletonintegerprimarykeycheck(singleton=1),schema_versionintegernotnullcheck(schema_version=1),global_revisionintegernotnullcheck(global_revisionbetween0and9007199254740991))"
@@ -101,9 +103,15 @@ type sqliteStore struct {
 }
 
 func (s *sqliteStore) configure(ctx context.Context) error {
+	// busy_timeout lets SQLite block and retry internally on SQLITE_BUSY
+	// write-lock contention before returning an error, so ordinary writer
+	// contention resolves without surfacing a spurious failure.
 	if _, err := s.connection.ExecContext(ctx, `PRAGMA busy_timeout = 10000`); err != nil {
 		return mapSQLiteError(err, "configure")
 	}
+	// Switching to WAL can transiently fail while another connection holds
+	// the file lock, so poll for confirmation within the busy_timeout budget
+	// instead of trusting a single attempt.
 	deadline := time.Now().Add(busyTimeoutMS * time.Millisecond)
 	for {
 		var journalMode string
@@ -158,6 +166,10 @@ func (s *sqliteStore) Set(
 	}
 	defer transaction.rollback()
 
+	// Reading the current revision and validating the expectation inside
+	// this same BEGIN IMMEDIATE transaction is what makes the check atomic:
+	// the write lock is already held, so no concurrent writer can change or
+	// remove the key between the check and the write below.
 	currentRevision, err := queryEntryRevision(ctx, transaction, key, "write")
 	if err != nil {
 		return domain.SetResult{}, err
@@ -256,6 +268,9 @@ func (s *sqliteStore) Delete(
 	}
 	defer transaction.rollback()
 
+	// Same compare-and-swap guarantee as Set: existence and expectation are
+	// checked under the write lock this transaction already holds, so the
+	// delete below cannot race with another writer's change to the key.
 	currentRevision, err := queryEntryRevision(ctx, transaction, key, "write")
 	if err != nil {
 		return domain.DeleteResult{}, err
@@ -383,6 +398,10 @@ func (s *sqliteStore) prepareSchema(ctx context.Context) error {
 		return err
 	}
 
+	// The three outcomes are mutually exclusive by construction: no
+	// application objects (fresh database), an exact legacy v0 shape, or an
+	// exact current v1 shape. Anything else is untrusted and rejected rather
+	// than guessed at.
 	switch {
 	case len(objects) == 0:
 		if err := initialize(ctx, transaction); err != nil {
@@ -413,6 +432,11 @@ func beginImmediate(
 	connection *sql.Conn,
 	operation string,
 ) (*immediateTransaction, error) {
+	// BEGIN IMMEDIATE takes the write lock at the start of the transaction
+	// rather than on the first write, serializing writers up front so the
+	// compare-and-swap checks and writes that follow run against a lock
+	// that's already held and stable, instead of risking a late upgrade
+	// failure partway through.
 	if _, err := connection.ExecContext(ctx, `BEGIN IMMEDIATE`); err != nil {
 		return nil, mapSQLiteError(err, operation)
 	}
@@ -455,6 +479,9 @@ func (transaction *immediateTransaction) commit(ctx context.Context) error {
 }
 
 func (transaction *immediateTransaction) rollback() {
+	// Deferred unconditionally after every begin: once commit has run this
+	// is a no-op, and on any error path it guarantees the write lock is
+	// released and no partial change is left visible.
 	if transaction.done {
 		return
 	}
@@ -533,6 +560,9 @@ func isExactV1(objects []schemaObject) bool {
 }
 
 func canonicalSQL(value string) string {
+	// Strips whitespace and quoting characters so schema comparisons aren't
+	// sensitive to how SQLite echoes stored CREATE TABLE text or how the
+	// original DDL happened to be authored.
 	var canonical strings.Builder
 	for _, character := range strings.ToLower(value) {
 		switch character {
@@ -608,6 +638,11 @@ type legacyEntry struct {
 }
 
 func migrateV0(ctx context.Context, transaction *immediateTransaction) error {
+	// Detection (in prepareSchema) and this rewrite share the single
+	// BEGIN IMMEDIATE transaction that already holds the write lock, so a
+	// competing opener either blocks before this migration begins or, once
+	// it acquires the lock afterward, observes the already-completed v1
+	// schema; the rewrites themselves can never interleave.
 	rows, err := transaction.QueryContext(
 		ctx,
 		`SELECT key, value_json FROM entries ORDER BY key COLLATE BINARY`,

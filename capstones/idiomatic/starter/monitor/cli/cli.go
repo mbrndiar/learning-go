@@ -29,6 +29,7 @@ const (
 	ExitCancelled = 130
 )
 
+// Dependencies supplies deterministic application and server seams.
 type Dependencies struct {
 	Client          *http.Client
 	Prober          probe.Prober
@@ -39,10 +40,12 @@ type Dependencies struct {
 	ShutdownTimeout time.Duration
 }
 
+// Run is the stable check/serve process boundary.
 func Run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	return RunWithDependencies(ctx, args, stdout, stderr, Dependencies{})
 }
 
+// RunWithDependencies runs a command with deterministic test seams.
 func RunWithDependencies(
 	ctx context.Context,
 	args []string,

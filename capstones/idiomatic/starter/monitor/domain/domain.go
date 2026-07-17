@@ -32,6 +32,7 @@ var (
 // Implemented reports whether the guided starter has been completed.
 const Implemented = false
 
+// Status is a target's classified health state.
 type Status string
 
 const (
@@ -41,10 +42,12 @@ const (
 	StatusUnhealthy Status = "unhealthy"
 )
 
+// Valid reports whether status is an observable probe classification.
 func (status Status) Valid() bool {
 	return status == StatusHealthy || status == StatusDegraded || status == StatusUnhealthy
 }
 
+// ErrorCode classifies an unhealthy probe result.
 type ErrorCode string
 
 const (
@@ -55,6 +58,7 @@ const (
 	ErrorBodyTooLarge ErrorCode = "body_too_large"
 )
 
+// Config is the validated monitor configuration.
 type Config struct {
 	SchemaVersion  int      `json:"schema_version"`
 	MaxConcurrency int      `json:"max_concurrency"`
@@ -62,6 +66,7 @@ type Config struct {
 	Targets        []Target `json:"targets"`
 }
 
+// Target describes one configured HTTP probe.
 type Target struct {
 	Name              string `json:"name"`
 	URL               string `json:"url"`
@@ -72,6 +77,7 @@ type Target struct {
 	MaxBodyBytes      int64  `json:"max_body_bytes"`
 }
 
+// Observation is one committed probe result.
 type Observation struct {
 	Sequence       int64      `json:"sequence"`
 	Target         string     `json:"target"`
@@ -85,6 +91,7 @@ type Observation struct {
 	Message        string     `json:"message"`
 }
 
+// MarshalJSON emits checked_at in UTC with millisecond precision.
 func (observation Observation) MarshalJSON() ([]byte, error) {
 	type wire struct {
 		Sequence       int64      `json:"sequence"`
@@ -106,6 +113,7 @@ func (observation Observation) MarshalJSON() ([]byte, error) {
 	})
 }
 
+// UnmarshalJSON accepts the same millisecond RFC3339 representation emitted by MarshalJSON.
 func (observation *Observation) UnmarshalJSON(data []byte) error {
 	type wire struct {
 		Sequence       int64      `json:"sequence"`
@@ -135,18 +143,21 @@ func (observation *Observation) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// Summary counts observations by classified status.
 type Summary struct {
 	Healthy   int `json:"healthy"`
 	Degraded  int `json:"degraded"`
 	Unhealthy int `json:"unhealthy"`
 }
 
+// CheckReport is the one-shot command response.
 type CheckReport struct {
 	CheckedAt time.Time     `json:"-"`
 	Summary   Summary       `json:"summary"`
 	Results   []Observation `json:"results"`
 }
 
+// MarshalJSON emits checked_at in UTC with millisecond precision.
 func (report CheckReport) MarshalJSON() ([]byte, error) {
 	type wire struct {
 		CheckedAt string        `json:"checked_at"`
@@ -160,6 +171,7 @@ func (report CheckReport) MarshalJSON() ([]byte, error) {
 	return json.Marshal(wire{CheckedAt: FormatTime(report.CheckedAt), Summary: report.Summary, Results: results})
 }
 
+// UnmarshalJSON accepts the same millisecond RFC3339 representation emitted by MarshalJSON.
 func (report *CheckReport) UnmarshalJSON(data []byte) error {
 	type wire struct {
 		CheckedAt string        `json:"checked_at"`
@@ -178,34 +190,41 @@ func (report *CheckReport) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// TargetState is the API representation of current target health.
 type TargetState struct {
 	Target      string       `json:"target"`
 	Status      Status       `json:"status"`
 	Observation *Observation `json:"observation"`
 }
 
+// TargetsResponse is returned by GET /v1/targets.
 type TargetsResponse struct {
 	Targets []TargetState `json:"targets"`
 }
 
+// HistoryResponse is returned by GET /v1/history/{name}.
 type HistoryResponse struct {
 	Target       string        `json:"target"`
 	Observations []Observation `json:"observations"`
 }
 
+// APIError describes one HTTP API failure.
 type APIError struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
 }
 
+// ErrorResponse is the HTTP API error envelope.
 type ErrorResponse struct {
 	Error APIError `json:"error"`
 }
 
+// FormatTime normalizes a timestamp to UTC millisecond precision.
 func FormatTime(value time.Time) string {
 	return value.UTC().Truncate(time.Millisecond).Format("2006-01-02T15:04:05.000Z")
 }
 
+// Summarize counts all classified observations.
 func Summarize(observations []Observation) Summary {
 	var summary Summary
 	for _, observation := range observations {
@@ -226,6 +245,7 @@ func LoadConfig(reader io.Reader) (Config, error) {
 	return Config{}, ErrNotImplemented
 }
 
+// TargetByName returns a target and whether it was configured.
 func TargetByName(targets []Target, name string) (Target, bool) {
 	return Target{}, false
 }

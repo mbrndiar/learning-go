@@ -290,6 +290,9 @@ func runServe(
 		}
 	}
 
+	// Publish the stopping state before canceling work, then join every
+	// scheduler-owned goroutine before draining HTTP handlers. This prevents
+	// probe results from mutating history while server shutdown is in progress.
 	state.Stop()
 	cancelScheduler()
 	if !schedulerJoined {
