@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mbrndiar/learning-go/projects/tasks/solution/api"
+	"github.com/mbrndiar/learning-go/projects/tasks/solution/server/api"
 	"github.com/mbrndiar/learning-go/projects/tasks/solution/task"
 	"github.com/mbrndiar/learning-go/projects/tasks/tests/m3"
 )

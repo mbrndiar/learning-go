@@ -79,7 +79,10 @@ After Module 12, complete the required
 [`Task REST API and clients`](projects/tasks/README.md) project before beginning
 the final capstones. It applies the course's domain, persistence, HTTP, client,
 CLI, and testing material to one portable contract while comparing three Go
-server stacks and two Go client stacks.
+server stacks and two Go client stacks. Begin implementation in
+`projects/tasks/starter/task`; the runnable entry points are
+`projects/tasks/solution/cmd/tasks-api` for the server and
+`projects/tasks/solution/cmd/tasks` for the client.
 
 ## 🏆 Capstone projects
 

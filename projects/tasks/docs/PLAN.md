@@ -41,18 +41,19 @@ Preserve these roles even when the target directory names differ:
 project/
 ├── README and contract documents
 ├── starter/
-│   ├── shared core and repositories
-│   ├── three server adapters
-│   └── two or three client transports
+│   ├── shared core
+│   ├── server composition, repositories, and three server adapters
+│   └── client command application and two or three transports
 ├── solution/
 │   └── the same public structure
 └── shared tests and fixtures
 ```
 
-The shared core owns the Task model, validation, application service, repository
-abstraction, SQLite repository, and versioned Markdown repository. Server
-adapters own inbound HTTP concerns. Client adapters own outbound HTTP concerns.
-Dependencies point toward the core.
+The shared core owns the Task model, validation, application service, and
+repository abstraction. The server side owns concrete SQLite and versioned
+Markdown repositories plus inbound HTTP concerns. The client side owns command
+policy and outbound HTTP concerns. Dependencies point toward the core; production
+client and server packages do not import each other.
 
 Tests select `starter` or `solution` without copying source into the harness.
 The untouched starter should build or import successfully and fail incomplete

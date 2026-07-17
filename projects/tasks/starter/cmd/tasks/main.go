@@ -6,8 +6,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/mbrndiar/learning-go/projects/tasks/starter/cli"
 	"github.com/mbrndiar/learning-go/projects/tasks/starter/client"
+	"github.com/mbrndiar/learning-go/projects/tasks/starter/client/cli"
 	"github.com/mbrndiar/learning-go/projects/tasks/starter/task"
 )
 

@@ -6,8 +6,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/mbrndiar/learning-go/projects/tasks/solution/cli"
 	"github.com/mbrndiar/learning-go/projects/tasks/solution/client"
+	"github.com/mbrndiar/learning-go/projects/tasks/solution/client/cli"
 	clientnethttp "github.com/mbrndiar/learning-go/projects/tasks/solution/client/nethttp"
 	clientresty "github.com/mbrndiar/learning-go/projects/tasks/solution/client/resty"
 )

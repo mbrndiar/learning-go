@@ -18,10 +18,10 @@ import (
 	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/getkin/kin-openapi/routers"
 	"github.com/getkin/kin-openapi/routers/legacy"
-	"github.com/mbrndiar/learning-go/projects/tasks/solution/api"
-	apichi "github.com/mbrndiar/learning-go/projects/tasks/solution/api/chi"
-	apigin "github.com/mbrndiar/learning-go/projects/tasks/solution/api/gin"
-	apinethttp "github.com/mbrndiar/learning-go/projects/tasks/solution/api/nethttp"
+	"github.com/mbrndiar/learning-go/projects/tasks/solution/server/api"
+	apichi "github.com/mbrndiar/learning-go/projects/tasks/solution/server/api/chi"
+	apigin "github.com/mbrndiar/learning-go/projects/tasks/solution/server/api/gin"
+	apinethttp "github.com/mbrndiar/learning-go/projects/tasks/solution/server/api/nethttp"
 	"github.com/mbrndiar/learning-go/projects/tasks/solution/task"
 )
 

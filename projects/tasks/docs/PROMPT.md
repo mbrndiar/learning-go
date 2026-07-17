@@ -58,7 +58,8 @@ Create equivalent roles for:
 
 - a framework-neutral core with a read-only Task value, validation, domain
   errors, application service, and repository abstraction;
-- SQLite and one-file versioned Markdown checklist repositories;
+- server-side SQLite and one-file versioned Markdown checklist repository
+  adapters;
 - three thin server adapters using **Lowest-level server stack**, **Server
   framework A**, and **Server framework B**;
 - one shared client command application with transports using **Lowest-level
@@ -68,7 +69,9 @@ Create equivalent roles for:
 
 Every client must interoperate with every server. Do not pair clients to servers
 or let a client use framework-private behavior. The core must not import server
-frameworks or HTTP client libraries.
+frameworks or HTTP client libraries, and production client/server packages must
+communicate only through the observable HTTP contract rather than importing each
+other.
 
 Select clients for distinct teaching value rather than to satisfy a rigid
 count. For example, the Go adaptation uses three servers (`net/http`, Chi, and

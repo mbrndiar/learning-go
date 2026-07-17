@@ -10,16 +10,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mbrndiar/learning-go/projects/tasks/solution/api"
-	apichi "github.com/mbrndiar/learning-go/projects/tasks/solution/api/chi"
-	apigin "github.com/mbrndiar/learning-go/projects/tasks/solution/api/gin"
-	apinethttp "github.com/mbrndiar/learning-go/projects/tasks/solution/api/nethttp"
 	"github.com/mbrndiar/learning-go/projects/tasks/solution/client"
 	clientnethttp "github.com/mbrndiar/learning-go/projects/tasks/solution/client/nethttp"
 	clientresty "github.com/mbrndiar/learning-go/projects/tasks/solution/client/resty"
 	"github.com/mbrndiar/learning-go/projects/tasks/solution/server"
-	"github.com/mbrndiar/learning-go/projects/tasks/solution/storage/markdown"
-	"github.com/mbrndiar/learning-go/projects/tasks/solution/storage/sqlite"
+	"github.com/mbrndiar/learning-go/projects/tasks/solution/server/api"
+	apichi "github.com/mbrndiar/learning-go/projects/tasks/solution/server/api/chi"
+	apigin "github.com/mbrndiar/learning-go/projects/tasks/solution/server/api/gin"
+	apinethttp "github.com/mbrndiar/learning-go/projects/tasks/solution/server/api/nethttp"
+	"github.com/mbrndiar/learning-go/projects/tasks/solution/server/storage/markdown"
+	"github.com/mbrndiar/learning-go/projects/tasks/solution/server/storage/sqlite"
 	"github.com/mbrndiar/learning-go/projects/tasks/solution/task"
 )
 

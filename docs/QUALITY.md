@@ -171,15 +171,15 @@ CI performs bounded fuzz smoke runs so fuzz targets are continuously executable:
 go test -run '^$' \
   -fuzz '^FuzzDecodeCreate$' \
   -fuzztime=2s \
-  ./projects/tasks/solution/api
+  ./projects/tasks/solution/server/api
 go test -run '^$' \
   -fuzz '^FuzzDecodeUpdate$' \
   -fuzztime=2s \
-  ./projects/tasks/solution/api
+  ./projects/tasks/solution/server/api
 go test -run '^$' \
   -fuzz '^FuzzParseDocument$' \
   -fuzztime=2s \
-  ./projects/tasks/solution/storage/markdown
+  ./projects/tasks/solution/server/storage/markdown
 go test -run '^$' \
   -fuzz '^FuzzParseKeyValue$' \
   -fuzztime=2s \

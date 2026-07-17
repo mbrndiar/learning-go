@@ -31,29 +31,47 @@ Both implementation roots have the same package layout and exported surface:
 
 ```text
 projects/tasks/{starter,solution}/
-├── task/                       domain and application boundaries
-├── storage/{sqlite,markdown}/  persistence adapters
-├── api/{nethttp,chi,gin}/      inbound HTTP adapters
-├── client/{nethttp,resty}/     outbound HTTP transports
-├── cli/                        shared command policy
-├── server/                     server composition and lifecycle
-└── cmd/{tasks-api,tasks}/      thin executable entry points
+├── task/                              shared domain and application core
+├── client/
+│   ├── cli/                           command parsing, output, and exit codes
+│   ├── {nethttp,resty}/               outbound HTTP transports
+│   └── internal/httpcontract/         client-side wire validation
+├── server/
+│   ├── api/{nethttp,chi,gin}/         inbound HTTP adapters
+│   ├── storage/{sqlite,markdown}/     persistence adapters
+│   └── *.go                           composition, configuration, lifecycle
+└── cmd/{tasks,tasks-api}/             thin runtime entry points
 ```
 
 ### Where to start
 
-Start learning in [`starter/`](starter/). It is the project entry point for
-milestone work: begin with the domain in `starter/task`, then follow the five
-milestones into persistence, servers, clients, and interoperability. Use
-[`solution/`](solution/) only as the reference implementation after attempting
-the corresponding starter milestone.
+There are three deliberate entry points:
 
-The runtime entry points are separate from that learning path:
+| Entry point | Start here when | Follow the code into |
+| --- | --- | --- |
+| **Learning:** [`starter/task/`](starter/task/) | Implementing the project milestones | `server/storage` → `server/api` → `client` → interoperability |
+| **Server runtime:** [`solution/cmd/tasks-api/`](solution/cmd/tasks-api/) | Running or tracing the API process | `server.Run` → selected storage + `task.Service` + selected API adapter |
+| **Client runtime:** [`solution/cmd/tasks/`](solution/cmd/tasks/) | Running or tracing the CLI process | selected client transport + `client/cli.Run` |
 
-- `cmd/tasks-api` selects a persistence backend and HTTP adapter, then delegates
-  composition and lifecycle to `server`.
-- `cmd/tasks` selects an HTTP client transport, then delegates command parsing,
-  output, and exit-code policy to `cli`.
+Start milestone work in [`starter/task/`](starter/task/), the shared inward core
+for the Task model, validation, repository capability, and application service.
+Then follow the five milestones into `starter/server/storage`,
+`starter/server/api`, `starter/client`, and interoperability. Use
+[`solution/`](solution/) only as the reference after attempting the corresponding
+starter milestone.
+
+The two runtime entry points are intentionally thin:
+
+- `cmd/tasks-api` parses process flags, then delegates backend/adapter selection,
+  resource ownership, and lifecycle to `server`;
+- `cmd/tasks` selects `client/nethttp` or `client/resty`, then delegates command
+  parsing, execution, JSON output, and exit-code policy to `client/cli`.
+
+To trace one server request, begin at `cmd/tasks-api`, continue through
+`server.Run`, then inspect the selected `server/api` adapter and
+`server/storage` repository around the shared `task.Service`. To trace one CLI
+command, begin at `cmd/tasks`, continue through `client/cli.Run`, then inspect
+the selected transport under `client`.
 
 `starter` and `solution` do not import or share production implementations. They
 mirror the same exported boundaries, and the root
@@ -68,28 +86,28 @@ starter tree after the corresponding milestones are implemented:
 
 ```text
 cmd/tasks
-  ├──> cli ──> client ──> task
-  │      └────────────────> task
+  ├──> client/cli ──> client ──> task
+  │          └──────────────────> task
   ├──> client/nethttp ──> client + task + client/internal/httpcontract
   └──> client/resty   ──> client + task + client/internal/httpcontract
 
 cmd/tasks-api ──> server
-                  ├──> api/{nethttp,chi,gin} ──> api ──> task
-                  ├──> storage/{sqlite,markdown} ──────> task
-                  └────────────────────────────────────> task
+                  ├──> server/api/{nethttp,chi,gin} ──> server/api ──> task
+                  ├──> server/storage/{sqlite,markdown} ─────────────> task
+                  └─────────────────────────────────────────────────> task
 ```
 
 | Folder | Direct project dependencies | Used by | Shared responsibility |
 | --- | --- | --- | --- |
-| `task` | None | Storage, API, clients, CLI, and server composition | Domain values, errors, repository boundary, and service |
-| `api` | `task` | All three API adapters | Transport-neutral DTOs, decoding, error mapping, and JSON responses |
-| `api/{nethttp,chi,gin}` | `api` | `server` | Framework-specific routing and recovery for one HTTP contract |
-| `storage/{sqlite,markdown}` | `task` | `server` | Alternative implementations of one repository contract |
+| `task` | None | Both application sides | Domain values, validation, errors, repository boundary, and service |
 | `client` | `task` | CLI, both client transports, and `cmd/tasks` | Client configuration, transport interface, and error types |
+| `client/cli` | `client`, `task` | `cmd/tasks` | Command parsing, JSON output, transport-independent behavior, and exit codes |
 | `client/internal/httpcontract` | `client`, `task` | Both solution client transports | Strict URL, response, and protocol validation |
 | `client/{nethttp,resty}` | `client`, `task`, shared HTTP contract in the solution | Solution `cmd/tasks` and interoperability tests; target wiring for the starter | Alternative implementations of one remote client contract |
-| `cli` | `client`, `task` | `cmd/tasks` | Command parsing, JSON output, transport-independent behavior, and exit codes |
-| `server` | API adapters, storage adapters, `task` | `cmd/tasks-api` | Backend/framework selection, resource ownership, and HTTP lifecycle |
+| `server/api` | `task` | All three API adapters | Transport-neutral DTOs, decoding, error mapping, and JSON responses |
+| `server/api/{nethttp,chi,gin}` | `server/api` | `server` | Framework-specific routing and recovery for one HTTP contract |
+| `server/storage/{sqlite,markdown}` | `task` | `server` | Alternative implementations of one repository contract |
+| `server` | Server API adapters, storage adapters, `task` | `cmd/tasks-api` | Backend/framework selection, resource ownership, and HTTP lifecycle |
 
 The [`tests/`](tests/) packages are reusable contracts rather than a third
 implementation. Milestone 1 assertions are imported by both starter and
@@ -98,11 +116,12 @@ alternative repositories, servers, and clients, while the root boundary test
 compares starter and solution as a whole.
 
 Dependencies point inward. `task` must not import an HTTP framework or client
-library. Storage adapters depend on the domain boundary. API adapters translate
-HTTP into service operations. Client transports implement the same remote
-contract, and `cli` owns command parsing, output, and exit-code policy. Every
-client must interoperate with every server; directory names are comparisons, not
-pairings.
+library. Server storage adapters depend on the repository boundary; server API
+adapters translate HTTP into service operations. Client transports implement the
+same remote contract, and `client/cli` owns command parsing, output, and
+exit-code policy. Production client packages never import server packages (and
+vice versa); every client still interoperates with every server through HTTP.
+Directory names are responsibilities, not framework pairings.
 
 SQLite and the versioned Markdown checklist are independent stores. Switching
 backends does not copy or synchronize data. Both must satisfy the same repository

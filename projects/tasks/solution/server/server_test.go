@@ -14,10 +14,10 @@ import (
 	"testing"
 	"time"
 
-	apinethttp "github.com/mbrndiar/learning-go/projects/tasks/solution/api/nethttp"
 	"github.com/mbrndiar/learning-go/projects/tasks/solution/server"
-	"github.com/mbrndiar/learning-go/projects/tasks/solution/storage/markdown"
-	"github.com/mbrndiar/learning-go/projects/tasks/solution/storage/sqlite"
+	apinethttp "github.com/mbrndiar/learning-go/projects/tasks/solution/server/api/nethttp"
+	"github.com/mbrndiar/learning-go/projects/tasks/solution/server/storage/markdown"
+	"github.com/mbrndiar/learning-go/projects/tasks/solution/server/storage/sqlite"
 	"github.com/mbrndiar/learning-go/projects/tasks/solution/task"
 )
 

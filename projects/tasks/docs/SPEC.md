@@ -74,8 +74,8 @@ The project has three responsibilities:
 
 | Responsibility | Owns | Does not own |
 | --- | --- | --- |
-| Shared core | Task rules, service operations, repository abstraction, SQLite and Markdown persistence | HTTP framework objects, client library objects, process configuration |
-| HTTP servers | Routing, request decoding, status selection, response encoding, dependency construction | Domain validation rules or storage-specific business logic |
+| Shared core | Task rules, service operations, and the repository abstraction | HTTP framework objects, client library objects, concrete persistence, process configuration |
+| HTTP servers | Routing, request decoding, status selection, response encoding, dependency construction, SQLite and Markdown persistence adapters | Domain validation rules or duplicated storage-specific business rules |
 | HTTP clients | Command parsing, safe request construction, response validation, output, exit codes | Direct repository access or server internals |
 
 The core points inward: adapters depend on the core, while the core never
