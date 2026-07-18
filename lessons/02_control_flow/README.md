@@ -4,6 +4,35 @@ This module covers how Go directs the order of execution: `if` with an
 optional initialization clause, `switch` in its several forms, every shape of
 `for` (Go's only loop keyword), and how `range` interacts with mutation.
 
+**Prerequisite:** [Module 1 — Basics](../01_basics/README.md).
+
+## 🧠 Mental model
+
+Go has one decision keyword, `if`, and one loop keyword, `for` — there is no
+`while`, `do`/`until`, or ternary operator. `if` always requires a `bool`
+condition (no truthy numbers or strings), and it may carry an `init;
+condition` form that scopes a helper variable — commonly an error — to just
+that chain, so it cannot leak into surrounding code. `switch` is a decision
+tool, not a jump table: choose an expression `switch` for one variable
+against several values, a condition-less `switch` as a readable
+`if`/`else if` chain, and a type `switch` to branch on an interface's
+dynamic type; cases do not fall through unless you say `fallthrough`.
+
+`for` covers every loop shape (three-part, condition-only, infinite, and
+`range`) through one keyword and different contracts for what runs when.
+`range` over a slice, map, or string produces a **copy** of each value, not
+a reference into the original — mutating the loop variable never mutates
+the source, and (before appending logic runs) `range` fixes the slice's
+length at the start, so elements appended during the loop are never visited.
+Map `range` order is unspecified and may vary from one iteration to the next;
+string `range` yields runes at their byte offset, not sequential indices,
+because runes can span multiple bytes.
+
+Labels exist only for one problem: reaching an outer loop from inside a
+nested one, since a bare `break`/`continue` only affects the innermost
+loop. Reach for a label when — and only when — you have genuine nesting to
+escape.
+
 ## 🎯 Learning objectives
 
 By the end of this module you will be able to:
@@ -46,6 +75,17 @@ Or check that every lesson in this module compiles at once:
 ```bash
 go build ./lessons/02_control_flow/...
 ```
+
+**Experiment:** in `03_for_and_range/main.go`, predict which of the two existing
+loops over `numbers` changes the original slice: the loop that multiplies the
+range value `n`, or the loop that writes through `numbers[i]`. Run it, then swap
+their order and explain why the first printed result changes but the ownership
+rule does not.
+
+## 🧩 Matching exercises
+
+[`exercises/02_control_flow/`](../../exercises/02_control_flow/README.md) —
+branching, switch, and loop/range helpers.
 
 ## 💡 Concepts covered
 
@@ -106,6 +146,12 @@ go build ./lessons/02_control_flow/...
    why?
 6. Why does `if count { ... }` fail to compile in Go, and what explicit
    condition should replace it?
+
+## 📚 References
+
+- [The Go Programming Language Specification: Statements](https://go.dev/ref/spec#Statements)
+- [A Tour of Go: Flow control statements](https://go.dev/tour/flowcontrol/1)
+- [Go 1.22 Release Notes: range over integers](https://go.dev/doc/go1.22#language)
 
 Previous: [Module 1 — Basics](../01_basics/README.md). Next:
 [Module 3 — Functions and Pointers](../03_functions_and_pointers/README.md).

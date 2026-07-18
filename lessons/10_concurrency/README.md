@@ -6,6 +6,11 @@ module builds up, one small runnable package at a time, from starting a
 single goroutine to running a bounded, cancellable worker pool without
 leaking a single goroutine or racing on shared memory.
 
+## ✅ Prerequisites
+
+Comfort with [Module 9](../09_tooling_cli_observability/README.md), especially
+the race detector (`03_race_detector`), which this module uses throughout.
+
 ## 🎯 Objectives
 
 By the end of this module you will be able to:
@@ -151,6 +156,16 @@ root:
 go test -race ./lessons/10_concurrency/...
 ```
 
+Try changing something small and re-running with `-race`: in
+`04_channel_direction_and_closing`, remove the `chan<-`/`<-chan` direction
+constraint from a function signature and see what compiles that shouldn't;
+in `08_worker_pool`, change `workerCount` up or down and observe how the total
+run time and interleaving of output change.
+
+When you are ready to write a concurrent pipeline yourself, do the matching
+exercise in
+[`exercises/10_concurrency/`](../../exercises/10_concurrency/README.md).
+
 ## ⚠️ Common mistakes
 
 - **Forgetting to synchronize before reading a result.** Starting a
@@ -209,3 +224,11 @@ accepts a `context.Context`, stops issuing new work and drains in-flight
 workers cleanly when the context is canceled, reports results through a
 channel closed exactly once, and passes `go test -race` with no leaked
 goroutines.
+
+## 🔗 Related reading
+
+- <https://go.dev/ref/mem>
+- <https://pkg.go.dev/sync>
+- <https://pkg.go.dev/sync/atomic>
+- <https://go.dev/blog/pipelines>
+- <https://go.dev/blog/context>

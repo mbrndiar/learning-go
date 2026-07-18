@@ -1,7 +1,8 @@
 # 🧱 05 — Structs, Methods, Interfaces
 
-Model a small catalog of 2D shapes to practice struct fields, value and
-pointer receivers, interfaces, `fmt.Stringer`, and `iota`-based enumerations.
+Apply [Module 5](../../lessons/05_structs_methods_interfaces/README.md) by
+modeling a small catalog of 2D shapes with struct fields, value and pointer
+receivers, interfaces, `fmt.Stringer`, and `iota`-based enumerations.
 
 ## ▶️ Workflow
 

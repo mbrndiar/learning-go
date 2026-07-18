@@ -1,6 +1,8 @@
 # 🚦 Exercises: Control Flow
 
-Practice classification, loops, and search using `if`, `switch`, and `for`.
+Practice the concepts from
+[Module 2](../../lessons/02_control_flow/README.md): classification, loops, and
+search using `if`, `switch`, and `for`.
 
 ## 🧩 Tasks
 

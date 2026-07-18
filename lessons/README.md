@@ -1,7 +1,9 @@
 # 🎓 Lessons
 
 Twelve modules teach Go through small packages that compile and run
-independently.
+independently. Each module README explains the prerequisite concepts, mental
+models, important boundaries, experiments, and review questions; the lesson
+packages provide the concrete code to predict, run, and modify.
 
 ## 🗂️ Modules
 

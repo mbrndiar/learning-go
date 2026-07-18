@@ -1,7 +1,9 @@
 # 🧠 Exercises
 
 Each lesson module has a matching practice folder. Starter packages contain
-TODOs and tests; `solution/` contains one reference implementation.
+TODOs and tests; `solution/` contains one reference implementation. Each
+exercise README links back to the module explanation so the task contract does
+not need to repeat the theory.
 
 ## ▶️ Workflow
 

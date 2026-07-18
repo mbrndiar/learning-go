@@ -1,9 +1,11 @@
 # 🛠️ Exercises: Tooling, CLI, and Observability
 
-`cliapp` is the testable core of a tiny greeting CLI; `cmd/taskcli` is the
-thin `main` that wires it to the real process. Keep that split: `main`
-should only translate `os.Args` into a call and an error into an exit code,
-so almost everything else can be unit tested without spawning a subprocess.
+This exercise applies
+[Module 9](../../lessons/09_tooling_cli_observability/README.md). `cliapp` is
+the testable core of a tiny greeting CLI; `cmd/taskcli` is the thin `main` that
+wires it to the real process. Keep that split: `main` should only translate
+`os.Args` into a call and an error into an exit code, so almost everything else
+can be unit tested without spawning a subprocess.
 
 ## 🧩 Tasks
 

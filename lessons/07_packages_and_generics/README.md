@@ -4,6 +4,37 @@ This module zooms out from a single file to a whole program made of
 packages, then zooms into the two Go features that let one function body
 work across many types: generics and range-over-func iterators.
 
+**Prerequisites:** Modules 1–6 (Basics through Errors, Files, Directories, JSON
+and Time).
+
+## 🧠 Mental model
+
+A **package** is a directory of source files sharing one namespace; a
+**module** is the versioned unit — rooted at `go.mod` — that can contain
+many packages and is what `go get` resolves and what `go.sum` checksums.
+Only names starting with an uppercase letter are exported, so a package's
+real API is its exported identifiers, not everything in the directory;
+`internal/` extends that boundary with a compiler-enforced rule instead of
+a naming convention.
+
+Generics let a function or type declare a relationship between types at
+compile time — "these parameters and this return value are the same type
+`T`" — without giving up static type checking or paying reflection's
+runtime cost. A **constraint** is the interface that lists which operations
+a type parameter must support; `any` guarantees no comparison, arithmetic, or
+ordering operations because it also includes non-comparable types such as
+slices and maps. Those operations require a narrower constraint such as
+`comparable`, `cmp.Ordered`, or a custom one.
+
+Range-over-func (`iter.Seq`) lets a plain function be the thing you `range`
+over: it receives a `yield` callback and calls it once per produced value,
+stopping as soon as `yield` returns `false`. That single contract is what
+lets custom iterators compose with `for range` like any built-in sequence.
+
+Generics and iterators both add a layer of indirection a reader must
+mentally unwrap — write the concrete version first, and generalize only
+once a second or third real, differently-typed caller justifies the cost.
+
 ## 🎯 Learning goals
 
 By the end of this module you will be able to:
@@ -49,6 +80,17 @@ go run ./lessons/07_packages_and_generics/04_avoiding_premature_abstraction
 
 Lesson 1 contains two supporting packages, `catalog/` and `internal/pricing/`,
 that `main.go` imports; read all three files together.
+
+**Experiment:** in `03_iterators_range_over_func/main.go`, add a `break`
+partway through a `for range` loop over a custom iterator, and add a print
+statement right before the iterator's `yield` call — run it and observe that
+`yield` returning `false` stops the iterator from producing further values.
+
+## 🧩 Matching exercises
+
+[`exercises/07_packages_and_generics/`](../../exercises/07_packages_and_generics/README.md)
+— generic constraints, `Map`/`Filter`/`Reduce`, and generic `Stack`/`Queue`
+types.
 
 ## 🧰 Module and dependency workflow
 
@@ -115,3 +157,11 @@ diff whenever dependencies change. See the official
    compared with `Sum`, even though both are technically correct?
 7. What is the difference between a package and a module, and what roles do
    `go get`, `go mod tidy`, and `go.sum` play when dependencies change?
+
+## 📚 References
+
+- [Go Modules Reference](https://go.dev/ref/mod)
+- [Tutorial: Create a Go module](https://go.dev/doc/tutorial/create-module)
+- [An Introduction To Generics](https://go.dev/blog/intro-generics)
+- [The Go Programming Language Specification: Type parameter declarations](https://go.dev/ref/spec#Type_parameter_declarations)
+- [Range over function types (Go 1.23)](https://go.dev/blog/range-functions)

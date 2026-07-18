@@ -6,6 +6,12 @@ and documentation browser. This module tours that toolchain and then builds
 two small runnable programs that show how production Go code takes command
 -line input and emits structured logs.
 
+## ✅ Prerequisites
+
+Comfort with [Module 8](../08_testing/README.md) (writing and running tests)
+and basic command-line usage. `staticcheck` and `govulncheck` need network
+access the first time you install them (`go install ...@version`).
+
 ## 🎯 Learning goals
 
 By the end of this module you will be able to:
@@ -46,6 +52,15 @@ go run ./lessons/09_tooling_cli_observability/03_race_detector -mode=safe
 go run -race ./lessons/09_tooling_cli_observability/03_race_detector -mode=race
 go run ./lessons/09_tooling_cli_observability/04_pprof_delve
 ```
+
+Try changing something small and re-running: in `01_cli_flags`, add a new
+`-shout` invocation and confirm the output changes as expected; in
+`02_structured_logging`, switch `-format` between `text` and `json` and
+compare the two log shapes for the same event.
+
+When you are ready to build a CLI and structured logger yourself, do the
+matching exercise in
+[`exercises/09_tooling_cli_observability/`](../../exercises/09_tooling_cli_observability/README.md).
 
 ## 🔬 Topic notes
 

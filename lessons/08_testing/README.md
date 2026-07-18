@@ -4,6 +4,13 @@ Go treats testing as a first-class part of the toolchain, not an add-on
 library. This module builds one small, focused package per topic so each
 idea is easy to isolate, run, and modify.
 
+## ✅ Prerequisites
+
+Comfort with [Module 7](../07_packages_and_generics/README.md) (packages,
+generics) and everyday Go syntax (functions, structs, error handling). No new
+external tools are required — everything here is `go test` and the standard
+library.
+
 ## 🎯 Learning goals
 
 By the end of this module you will be able to:
@@ -51,6 +58,16 @@ go test -v ./lessons/08_testing/02_table_driven          # verbose: show every (
 go test -run TestAdd/negative ./lessons/08_testing/02_table_driven
 go test ./lessons/08_testing/...                          # every package in this module
 ```
+
+Once you've read a lesson, try changing something small and predict the
+effect before rerunning `go test -v`: for example, in `02_table_driven` add a
+losing test case (`want` set wrong on purpose) and confirm `t.Run` reports
+exactly that subtest as failed, or in `07_coverage` add a case that exercises
+the missing "D" grade branch and watch the coverage percentage change.
+
+When you are ready to write tests yourself rather than only read them, do the
+matching exercise in
+[`exercises/08_testing/`](../../exercises/08_testing/README.md).
 
 ## 🔬 Topic notes
 
@@ -222,3 +239,11 @@ go test -fuzz=FuzzParseKeyValue -fuzztime=30s ./lessons/08_testing/08_fuzzing
    and what would happen to that guarantee if it were deleted?
 10. Why does a fuzz target benefit from checking an invariant (like a
     round trip) rather than only checking "did it panic"?
+
+## 🔗 Related reading
+
+- <https://pkg.go.dev/testing>
+- <https://go.dev/doc/tutorial/add-a-test>
+- <https://go.dev/blog/subtests>
+- <https://pkg.go.dev/net/http/httptest>
+- <https://go.dev/security/fuzz>

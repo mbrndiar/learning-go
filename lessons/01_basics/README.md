@@ -5,6 +5,43 @@ how Go represents values and types, work through every operator you will use
 daily, and understand how Go stores text under the hood. Every lesson is a
 runnable, self-contained `package main`.
 
+**Prerequisites:** none — start here.
+
+## 🧠 Mental model
+
+A Go **program** is one or more **packages** compiled together. Executable
+statements live inside functions; after package initialization, a command
+enters `func main` in `package main`. There is no interpreter executing the
+source line by line — `go run`/`go build` compile the whole package first, so a
+type error anywhere prevents the command from starting.
+
+Every value has a type, and every variable has one static type fixed when it is
+declared — this is what "statically typed" means in practice. A variable you
+never assign still holds a well-defined
+**zero value** (`0`, `""`, `false`, `nil`, ...) rather than garbage or
+"undefined", so a freshly declared value is always safe to read. Because
+types are fixed, Go never silently converts one numeric type into another
+the way some languages do; you convert explicitly with `T(x)`, and that
+conversion is the point where truncation or overflow can happen.
+
+Choosing a numeric representation is a choice about exactness: integers store
+whole numbers exactly within their fixed range but can overflow, while
+`float64` trades exactness for range and cannot represent most decimal
+fractions precisely — after assigning `0.1`, `0.2`, and `0.3` to `float64`
+variables, adding the first two need not compare equal to the third. (Untyped
+constant arithmetic is evaluated more precisely until a concrete type is
+required.) Use integers or a fixed-scale integer such as cents whenever exact
+values matter, and reserve floats for measurements that already carry rounding
+error.
+
+Strings are read-only, UTF-8-encoded byte sequences, not arrays of
+characters. `len(s)` counts bytes; a **rune** is one Unicode code point,
+which may itself be more than one byte and still not match what a person
+perceives as one printed "character" (an emoji or accented letter can span
+several runes). Ranging over a string or converting to `[]rune` walks
+code points, not bytes — reach for that boundary whenever you index or
+count by "character".
+
 ## 🎯 Learning objectives
 
 By the end of this module you will be able to:
@@ -50,6 +87,15 @@ Or check that every lesson in this module compiles at once:
 ```bash
 go build ./lessons/01_basics/...
 ```
+
+**Experiment:** in `04_strings_bytes_runes/main.go`, print both `len(s)` and
+`utf8.RuneCountInString(s)` for a string containing an emoji or an accented
+letter, then predict which number is larger before you run it.
+
+## 🧩 Matching exercises
+
+[`exercises/01_basics/`](../../exercises/01_basics/README.md) — conversions,
+string/rune helpers, and a default-fallback parser.
 
 ## 💡 Concepts covered
 
@@ -109,5 +155,12 @@ go build ./lessons/01_basics/...
 5. What happens if you convert the `int` value `300` to a `byte`, and why?
 6. Why can `0.1 + 0.2` differ from the nearest `float64` representation of
    `0.3`, and why is one fixed epsilon not correct for every calculation?
+
+## 📚 References
+
+- [The Go Programming Language Specification](https://go.dev/ref/spec)
+- [A Tour of Go: Basics](https://go.dev/tour/basics/1)
+- [Strings, bytes, runes and characters in Go](https://go.dev/blog/strings)
+- [`unicode/utf8` package docs](https://pkg.go.dev/unicode/utf8)
 
 Next: [Module 2 — Control Flow](../02_control_flow/README.md).

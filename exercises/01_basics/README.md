@@ -1,7 +1,8 @@
 # 🌱 Exercises: Basics
 
-Practice conversions and string/rune helpers using only values, basic types,
-operators, and `for`/`if` control flow.
+Practice the concepts from
+[Module 1](../../lessons/01_basics/README.md): conversions and string/rune
+helpers using only values, basic types, operators, and `for`/`if` control flow.
 
 ## 🧩 Tasks
 

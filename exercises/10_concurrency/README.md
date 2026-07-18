@@ -1,5 +1,6 @@
 # 🚦 Exercises: Concurrency
 
+This exercise applies [Module 10](../../lessons/10_concurrency/README.md).
 `pipeline` builds a small worker pipeline out of goroutines and channels,
 covering the four ideas that make concurrent Go code trustworthy: bounded
 concurrency, cancellation, error propagation, and channel ownership — then

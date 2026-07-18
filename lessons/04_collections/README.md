@@ -5,6 +5,23 @@ The emphasis is on the parts that surprise newcomers — shared backing
 arrays, `append`'s growth behavior, and map iteration order — because
 misunderstanding them causes real bugs, not just stylistic issues.
 
+**Prerequisites:** [Module 1 — Basics](../01_basics/README.md),
+[Module 2 — Control Flow](../02_control_flow/README.md), and
+[Module 3 — Functions and Pointers](../03_functions_and_pointers/README.md).
+
+## 🧠 Choosing by semantics
+
+Module 3 showed that every parameter is a copy, but a copied slice, map, or
+pointer still shares the data it refers to. Arrays are the exception: they
+copy every element, so use one only when a fixed, value-semantics size is
+what you want (rare outside small, fixed-shape data). Reach for a slice by
+default, and a map when you need lookup by key rather than by position. The
+key ownership question for both is: does this function need its own
+independent copy, or is it fine to alias and mutate the caller's underlying
+array/entries? `copy` and full slice expressions answer that question for
+slices; the bullets below cover exactly how the aliasing and growth rules
+work.
+
 ## 🎯 Learning objectives
 
 By the end of this module you will be able to:
@@ -15,7 +32,7 @@ By the end of this module you will be able to:
   mutation through one slice is visible through another, and use `copy` to
   make an independent duplicate;
 - use maps for membership checks and deletion, and explain why map
-  iteration order is randomized and how to get deterministic output anyway;
+  iteration order is unspecified and how to get deterministic output anyway;
 - sort slices with `slices.Sort`/`slices.SortFunc` and combine the `slices`
   and `maps` packages to iterate a map in a predictable order.
 
@@ -50,6 +67,16 @@ Or check that every lesson in this module compiles at once:
 go build ./lessons/04_collections/...
 ```
 
+**Experiment:** in `02_slice_sharing_and_copy/main.go`, take a sub-slice
+`s[1:3]` of an existing slice with spare capacity, `append` one element to
+it, then print the original slice — predict whether the original changes
+before you run it.
+
+## 🧩 Matching exercises
+
+[`exercises/04_collections/`](../../exercises/04_collections/README.md) —
+slice growth, aliasing, maps, and deterministic sorted output.
+
 ## 💡 Concepts covered
 
 - Arrays: a fixed size that is part of the type (`[3]int` and `[4]int` are
@@ -73,9 +100,9 @@ go build ./lessons/04_collections/...
   panics on write), the "comma ok" idiom (`value, ok := m[key]`) to
   distinguish a missing key from a present key holding a zero value, and
   `delete` (a no-op for a missing key).
-- Map iteration order is randomized on purpose so no code accidentally
-  depends on an unspecified order; collecting and sorting the keys is the
-  standard way to get deterministic, repeatable output.
+- Map iteration order is unspecified and may vary from one iteration to the
+  next; collecting and sorting the keys is the standard way to get
+  deterministic, repeatable output.
 - Using `map[T]struct{}` as an idiomatic, zero-overhead set.
 - Sorting with `slices.Sort` (ordered basic types), `slices.SortFunc` (custom
   or multi-field comparisons, including tie-breaking for determinism),
@@ -111,6 +138,14 @@ go build ./lessons/04_collections/...
 4. Why does Go randomize map iteration order, and what is the idiomatic way
    to print a map's entries in a stable, repeatable order?
 5. When would you reach for `slices.SortFunc` instead of `slices.Sort`?
+
+## 📚 References
+
+- [Go Slices: usage and internals](https://go.dev/blog/slices-intro)
+- [The Go Programming Language Specification: Slice types](https://go.dev/ref/spec#Slice_types)
+- [Go maps in action](https://go.dev/blog/maps)
+- [`slices` package docs](https://pkg.go.dev/slices)
+- [`maps` package docs](https://pkg.go.dev/maps)
 
 Previous:
 [Module 3 — Functions and Pointers](../03_functions_and_pointers/README.md).

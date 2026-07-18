@@ -6,6 +6,11 @@ deterministically with `defer`, work with files and directory trees, exchange
 structured data safely through JSON, and distinguish elapsed durations from
 wall-clock timestamps.
 
+**Prerequisites:** Modules 1–5 (Basics, Control Flow, Functions and Pointers,
+Collections, Structs/Methods/Interfaces). In particular, the error and clock
+types here are ordinary structs with methods and small interfaces, so this
+module leans directly on Module 5's mental models.
+
 ## 🎯 Learning goals
 
 By the end of this module you will be able to:
@@ -22,6 +27,73 @@ By the end of this module you will be able to:
   program's boundary;
 - parse and format RFC 3339 timestamps, normalize instants to UTC, work with
   `time.Duration`, and inject a clock when tests need deterministic time.
+
+## 📖 Errors, resources, data and time, explained
+
+An **error** in Go is just a value satisfying the one-method `error`
+interface (`Error() string`) — not a separate exception mechanism with its
+own control flow. That lets errors be compared, wrapped, stored, and passed
+around like any other value. A **sentinel error** (`var ErrNotFound = ...`)
+identifies a specific condition by identity; a **typed error**
+(`*ValidationError`) additionally carries structured detail. `fmt.Errorf`
+with `%w` builds an **error chain**: each wrap keeps a reference to the error
+it wraps instead of flattening it into a string, so `errors.Is` can walk the
+whole chain looking for a matching sentinel and `errors.As` can walk it
+looking for a matching type, both succeeding no matter how many layers of
+wrapping sit in between. Using `%v` instead of `%w`, or comparing an error to
+a string, discards that chain — the check might work today and silently stop
+working the moment someone adds a wrapping layer.
+
+Go's resource-management idiom is **acquire, then immediately defer the
+release**: call `os.Open`, check the error, and put `defer file.Close()` on
+the very next line, before doing anything else with the file. `defer`
+schedules a call to run when the *enclosing function* returns, not when a
+block or loop iteration ends, so deferred calls in a loop all pile up until
+the function exits — a reason to factor loop bodies that open resources into
+their own function. A deferred cleanup can itself fail (a deferred `Close`
+on a file opened for writing can return a real error, and `RemoveAll` can
+fail to remove everything); when that failure matters, capture it with a
+named return value and `errors.Join` rather than discarding it, as lesson 6's
+`run` function does for the temporary root it owns.
+
+Data crossing an I/O boundary passes through distinct layers, and it is worth
+keeping them separate in your head: **raw bytes** (what `os.File` and
+`io.Reader` hand you, with no assumed structure), **decoded text** (bytes
+interpreted under an encoding, typically UTF-8, and often split into lines
+with `bufio.Scanner`), and **structured data** (JSON decoded into a Go value
+by `encoding/json`, obeying the shape a struct's fields and tags describe).
+Each layer only guarantees what its own step promises. Successful JSON decoding
+proves the input was valid JSON and that encountered values could be assigned
+under the decoder's rules; by default, missing fields become zero values and
+unknown fields may be ignored. It says nothing about whether required values
+are present or sensible, so strict shape rules and semantic validation are
+separate steps before decoded data is trusted.
+
+Files, paths, and directories carry an implicit **ownership** boundary: a
+program should only delete or overwrite what it created or was explicitly
+told to manage. `filepath.Clean` is purely lexical — it rewrites `a/../b`
+and repeated separators into a canonical form, but it does not check that a
+path stays under an intended root, and it does nothing about symlinks, so it
+is not an authorization or sandboxing mechanism. `os.Remove` deletes exactly
+one file or empty directory and fails loudly on anything else, making it the
+safe default; `os.RemoveAll` recurses without asking, so reserve it for a
+directory the program just created and unambiguously owns (as in lesson 6's
+temporary workspace), never for a path built from unvalidated input.
+`os.Rename` is a same-filesystem move: it can fail across filesystems, and
+its behavior when the destination already exists varies by operating
+system, so treat it as a boundary to check rather than a universal move.
+
+Finally, `time.Time` mixes several concepts that are easy to blur: an
+**instant** (a specific point in time), a **location** (the time zone used
+to display it, which `==` also compares — use `Time.Equal` to compare
+instants alone), a **wall-clock** reading (suitable for formatting,
+persistence, and RFC 3339 timestamps), and an optional **monotonic** reading
+attached by `time.Now` (used internally by `Sub`/`time.Since` for reliable
+elapsed-time measurement, but not preserved by formatting, JSON, or storage).
+A `time.Duration` measures elapsed time, independent of any calendar date or
+location. Code that needs the current instant should depend on a small
+`Clock` interface rather than call `time.Now` directly, so tests can inject
+a fixed time and assert exact results instead of tolerating timing noise.
 
 ## 📦 Lessons
 
@@ -128,3 +200,29 @@ the strict-versus-lenient JSON decoding cases, then run it to check.
 11. Why does `filepath.Clean` not establish a security boundary, and what
     additional policy is needed for untrusted paths?
 12. What limitations of `os.Rename` matter when a program moves files?
+
+## 🔬 Experiment
+
+Combine lesson 4's strict JSON boundary with a small address-book record: add a
+`CreatedAt string` field, parse it the way lesson 5 parses RFC 3339 timestamps
+(`time.Parse(time.RFC3339, raw)`), wrapping a failure with `%w` so
+`errors.As` can still recover the underlying `*time.ParseError`, then save
+valid contacts into a `records/` directory created with `os.MkdirAll` (as in
+lesson 6). Open the
+JSON file with `os.Create`/`os.Open` and `defer file.Close()` on the very
+next line in every function that touches it. Before overwriting an existing
+address book, rename the old file to `records/archive/<name>.bak` with
+`os.Rename`, wrapping any error with `%w`, then confirm with `errors.Is` and
+`errors.As` that a missing source file and a malformed timestamp are both
+still recoverable through every layer of wrapping.
+
+Practice the same ideas with tests behind them in the matching exercise:
+[`exercises/06_errors_files_json/`](../../exercises/06_errors_files_json/).
+
+## 🔗 Related reading
+
+- <https://go.dev/blog/errors-are-values>, <https://pkg.go.dev/errors>
+- <https://pkg.go.dev/os>, <https://pkg.go.dev/io>,
+  <https://pkg.go.dev/path/filepath>
+- <https://pkg.go.dev/encoding/json>
+- <https://pkg.go.dev/time>

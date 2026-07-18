@@ -1,6 +1,8 @@
 # 🗂️ Exercises: Collections
 
-Practice slices, maps, `copy`, sorting, and shared-backing-array awareness.
+Practice the concepts from
+[Module 4](../../lessons/04_collections/README.md): slices, maps, `copy`,
+sorting, and shared-backing-array awareness.
 
 ## 🧩 Tasks
 

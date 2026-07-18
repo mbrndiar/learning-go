@@ -1,6 +1,7 @@
 # 🗂️ 06 — Errors, Files, Directories, JSON, and Time
 
-Persist a small address book to a JSON file to practice typed errors, error
+Apply [Module 6](../../lessons/06_errors_files_json/README.md) by persisting a
+small address book to a JSON file while practicing typed errors, error
 wrapping, `defer`-based resource cleanup, file I/O, and JSON validation.
 The final three helpers practice timestamps and elapsed durations without
 changing the address-book format. The directory helpers then practice creating,

@@ -1,5 +1,6 @@
 # 🧪 Exercises: Testing
 
+This exercise applies [Module 8](../../lessons/08_testing/README.md).
 `textproc` is a small, already-implemented text-processing package. Unlike
 earlier modules, you will not implement its functions — you will write the
 **tests, benchmark, and fuzz target** that prove they work. This mirrors real

@@ -1,6 +1,8 @@
 # 🧮 Exercises: Functions and Pointers
 
-Practice multiple return values, variadic parameters, closures, and pointers.
+Practice the concepts from
+[Module 3](../../lessons/03_functions_and_pointers/README.md): multiple return
+values, variadic parameters, closures, and pointers.
 
 ## 🧩 Tasks
 

@@ -6,6 +6,37 @@ the difference between passing a copy of a value and passing a pointer to
 it — a distinction that motivates pointer receivers on methods later in the
 course.
 
+**Prerequisites:** [Module 1 — Basics](../01_basics/README.md) and
+[Module 2 — Control Flow](../02_control_flow/README.md).
+
+## 🧠 Mental model
+
+A function's signature is a contract: the parameter types and the return
+types are what a caller can rely on. Go has no exceptions, so a function
+that can fail returns an extra `error` value alongside its result, and
+convention (not the compiler) says to check it before trusting the other
+return values.
+
+Functions themselves are values — you can hold one in a variable, put it in
+a map, or return one from another function. A **closure** is a function
+literal that refers to variables from its enclosing scope. It retains those
+variables themselves, not merely a snapshot of each value at creation time;
+each call to a factory function creates a fresh set of captured variables,
+which is why two calls produce two independent counters.
+
+Recursion trades a straightforward problem decomposition (a base case plus
+a smaller sub-problem) for stack frames and, without memoization, possibly
+exponential repeated work — prefer an iterative or memoized version once
+performance matters.
+
+Go passes every argument **by value**: a function parameter is a copy, so
+reassigning it or mutating a plain `int`/`string`/`struct` parameter never
+changes the caller's variable. This is not "pass by reference" — it is
+always a copy — but a copied slice, map, pointer, channel, or function value
+still holds the same header or address, so mutating the data it *points to*
+(as opposed to the header itself) is visible to the caller. That distinction
+is exactly what Module 4 explores in depth for slices and maps.
+
 ## 🎯 Learning objectives
 
 By the end of this module you will be able to:
@@ -47,6 +78,16 @@ Or check that every lesson in this module compiles at once:
 ```bash
 go build ./lessons/03_functions_and_pointers/...
 ```
+
+**Experiment:** in `04_pointers/main.go`, write two versions of a `swap`
+function — one taking `int` parameters and one taking `*int` parameters —
+call each from `main`, and print the caller's variables afterward to see
+which one actually swaps them.
+
+## 🧩 Matching exercises
+
+[`exercises/03_functions_and_pointers/`](../../exercises/03_functions_and_pointers/README.md)
+— multi-return functions, closures, recursion, and pointer mutation.
 
 ## 💡 Concepts covered
 
@@ -110,6 +151,13 @@ go build ./lessons/03_functions_and_pointers/...
    independent counters instead of one shared counter?
 5. What is the base case of a recursive function, and what goes wrong if a
    recursive function never reaches it?
+
+## 📚 References
+
+- [The Go Programming Language Specification: Function declarations](https://go.dev/ref/spec#Function_declarations)
+- [A Tour of Go: Pointers](https://go.dev/tour/moretypes/1)
+- [Go FAQ: Pointers and Allocation](https://go.dev/doc/faq#Pointers)
+- [Effective Go: Errors are values](https://go.dev/blog/errors-are-values)
 
 Previous: [Module 2 — Control Flow](../02_control_flow/README.md). Next:
 [Module 4 — Collections](../04_collections/README.md).

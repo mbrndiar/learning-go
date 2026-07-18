@@ -1,8 +1,8 @@
 # 📦 07 — Packages and Generics
 
-Build small, reusable generic collection helpers and types to practice type
-parameters, custom constraints, and designing a package around an exported
-API boundary with unexported internal state.
+Apply [Module 7](../../lessons/07_packages_and_generics/README.md) by building
+small, reusable generic collection helpers and types with type parameters,
+custom constraints, and an exported API over unexported internal state.
 
 ## ▶️ Workflow
 
