@@ -17,6 +17,7 @@ Complete the required
 12 and before starting either capstone. Its finished three-server-by-two-client
 solution applies the SQL, repository, HTTP, lifecycle, CLI, and testing
 boundaries used here. Module 11 leads into the comparative SQLite capstone;
+Module 6 supplies JSON, time, clock, and resource-ownership foundations, while
 Modules 10 and 12 supply the concurrency, HTTP client, and shutdown skills used
 by the idiomatic monitor.
 

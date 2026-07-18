@@ -1,9 +1,10 @@
-# 🗂️ 06 — Errors, Files, JSON, and Time
+# 🗂️ 06 — Errors, Files, Directories, JSON, and Time
 
 Persist a small address book to a JSON file to practice typed errors, error
 wrapping, `defer`-based resource cleanup, file I/O, and JSON validation.
 The final three helpers practice timestamps and elapsed durations without
-changing the address-book format.
+changing the address-book format. The directory helpers then practice creating,
+walking, moving within, and safely cleaning up a temporary workspace.
 
 ## ▶️ Workflow
 
@@ -12,9 +13,9 @@ go test ./exercises/06_errors_files_json
 go test ./exercises/06_errors_files_json/solution
 ```
 
-The starter package in this folder (`contacts.go`) fails until you implement
-every function and method. Compare with `solution/contacts.go` only after a
-genuine attempt.
+The starter files in this package fail until you implement every function and
+method. Compare with the matching files under `solution/` only after a genuine
+attempt.
 
 ## 🧩 Tasks
 
@@ -50,6 +51,16 @@ genuine attempt.
    `Elapsed(start, end time.Time) (time.Duration, error)`. Return `end.Sub(start)`
    when the interval is non-negative; otherwise return
    `ErrEndBeforeStart`.
+10. Implement `EnsureWorkspace(root string) error`, creating `inbox`, `archive`,
+    and `reports/daily` with `os.MkdirAll`.
+11. Implement `ListRegularFiles(root string) ([]string, error)` with
+    `filepath.WalkDir`. Return regular files as deterministic, relative,
+    slash-separated paths; wrap `ErrNotDirectory` when root is a file.
+12. Implement `MoveFile(source, destination string) error`, creating the
+    destination parent directory before calling `os.Rename`.
+13. Implement `RemoveEmptyDirectory(path string) error` with `os.Stat` and
+    `os.Remove`. Reject files with `ErrNotDirectory` and let `os.Remove` reject
+    non-empty directories.
 
 ## 🔍 What this covers
 
@@ -62,6 +73,8 @@ genuine attempt.
 - Validating data before performing I/O.
 - RFC 3339 timestamp parsing, UTC normalization, elapsed durations, and
   `Time.Equal`-based instant comparisons in tests.
+- Directory creation, recursive deterministic listing, same-filesystem moves,
+  and empty-directory removal under `t.TempDir`.
 
 ## ⚠️ Common mistakes
 
@@ -75,3 +88,9 @@ genuine attempt.
   truncated or partial file behind on a validation failure.
 - Comparing `time.Time` with `==` when the intent is to compare instants, or
   persisting a local display time without an offset.
+- Returning absolute or platform-specific paths from `ListRegularFiles` instead
+  of relative paths normalized with `filepath.ToSlash`.
+- Using `os.RemoveAll` where the contract only calls for removing one verified
+  empty directory.
+- Assuming `os.Rename` copies data across filesystems or has portable overwrite
+  behavior for an existing destination.

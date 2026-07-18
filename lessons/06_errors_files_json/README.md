@@ -1,9 +1,10 @@
-# 🧯 Module 6 — Errors, Files, JSON and Time
+# 🧯 Module 6 — Errors, Files, Directories, JSON and Time
 
 This module treats failure as data. You will model errors as ordinary values,
 wrap them with context while keeping them inspectable, manage resources
-deterministically with `defer`, and exchange structured data safely through
-JSON.
+deterministically with `defer`, work with files and directory trees, exchange
+structured data safely through JSON, and distinguish elapsed durations from
+wall-clock timestamps.
 
 ## 🎯 Learning goals
 
@@ -14,8 +15,9 @@ By the end of this module you will be able to:
 - wrap errors with `fmt.Errorf` and `%w` without losing the original cause;
 - inspect wrapped error chains with `errors.Is` and `errors.As`;
 - use `defer` to pair resource acquisition with guaranteed cleanup;
-- read and write files with `os`, `io`, and `bufio`, and build paths safely
-  with `path/filepath`; and
+- read and write files with `os`, `io`, and `bufio`, build paths with
+  `path/filepath`, and create, inspect, traverse, move, and remove directories
+  with explicit ownership boundaries;
 - encode and decode JSON with struct tags, and validate decoded data at a
   program's boundary;
 - parse and format RFC 3339 timestamps, normalize instants to UTC, work with
@@ -36,6 +38,9 @@ By the end of this module you will be able to:
 5. [`05_time_durations_and_clocks/`](05_time_durations_and_clocks/) —
    durations, instants and locations, RFC 3339, UTC normalization, elapsed
    time, and a testable clock seam.
+6. [`06_directory_operations/`](06_directory_operations/) — `os.MkdirAll`,
+   `os.ReadDir`, `os.Stat`, `filepath.WalkDir`, deterministic relative paths,
+   same-filesystem moves, and safe `Remove`/owned-`RemoveAll` boundaries.
 
 ## ▶️ How to run a lesson
 
@@ -47,6 +52,7 @@ go run ./lessons/06_errors_files_json/02_wrapping_and_inspecting_errors
 go run ./lessons/06_errors_files_json/03_files_and_defer
 go run ./lessons/06_errors_files_json/04_json_encoding_and_validation
 go run ./lessons/06_errors_files_json/05_time_durations_and_clocks
+go run ./lessons/06_errors_files_json/06_directory_operations
 ```
 
 Predict the output of each program first, especially the `defer` ordering and
@@ -78,6 +84,18 @@ the strict-versus-lenient JSON decoding cases, then run it to check.
   `json.Unmarshal` silently ignores fields it does not recognize, which
   hides typos. Use `json.NewDecoder(...).DisallowUnknownFields()` when input
   should be rejected instead of silently truncated.
+- **Using `os.RemoveAll` on an unchecked path.** Recursive deletion is
+  appropriate for a temporary tree the program just created and owns, not for
+  a path assembled from untrusted or weakly validated input.
+- **Treating `filepath.Clean` as a sandbox.** It normalizes path syntax
+  lexically; it does not prove that a path remains below an intended root or
+  account for symlink escapes.
+- **Expecting `filepath.WalkDir` to follow symlinked directories.** It reports
+  the symlink entry but does not traverse its target unless the program adds an
+  explicit, loop-safe policy.
+- **Assuming `os.Rename` is a universal move.** It can fail across filesystems,
+  and replacement behavior for an existing destination varies by operating
+  system.
 - **Comparing `time.Time` values with `==`.** That operator also compares the
   location and monotonic-clock metadata. Use `t.Equal(u)` when the question is
   whether two values represent the same instant.
@@ -103,3 +121,10 @@ the strict-versus-lenient JSON decoding cases, then run it to check.
    `==`?
 8. Why should elapsed work use durations/monotonic clock readings while
    persisted timestamps use a wall-clock representation such as RFC 3339?
+9. When should you use `os.ReadDir` instead of `filepath.WalkDir`, and what path
+   information does each callback or entry provide?
+10. Why is `os.Remove` a safer default than `os.RemoveAll`, and when is
+    recursive cleanup justified?
+11. Why does `filepath.Clean` not establish a security boundary, and what
+    additional policy is needed for untrusted paths?
+12. What limitations of `os.Rename` matter when a program moves files?

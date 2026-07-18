@@ -152,6 +152,35 @@ case <-ctx.Done():
 Only the sender closes a channel. Every goroutine should have a clear owner and
 termination path.
 
+## Files and directories
+
+```go
+if err := os.MkdirAll(filepath.Join(root, "reports", "daily"), 0o755); err != nil {
+    return err
+}
+
+entries, err := os.ReadDir(root) // one level, sorted by filename
+if err != nil {
+    return err
+}
+
+err = filepath.WalkDir(root, func(path string, entry fs.DirEntry, err error) error {
+    if err != nil {
+        return err
+    }
+    if entry.IsDir() {
+        return nil
+    }
+    fmt.Println(path)
+    return nil
+})
+```
+
+Use `os.Remove` for one known file or empty directory. Reserve
+`os.RemoveAll` for an exact tree the program created and owns. `filepath.Clean`
+normalizes syntax but does not confine untrusted paths below a root. `os.Rename`
+is a same-filesystem move and has platform-specific replacement behavior.
+
 ## SQL and SQLite
 
 ```go

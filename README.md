@@ -13,7 +13,8 @@ By the end of the course, you will be able to:
 - work confidently with values, control flow, functions, pointers, slices,
   maps, structs, methods, interfaces, and generics;
 - model failures with explicit error values and manage resources with `defer`;
-- read and write files and exchange structured data with JSON;
+- read and write files, create and traverse directories, and exchange structured
+  data with JSON;
 - work with durations, UTC-normalized timestamps, and testable clock boundaries;
 - organize code into packages and manage dependencies with Go modules;
 - write table-driven tests, benchmarks, fuzz targets, and HTTP tests;
@@ -147,12 +148,13 @@ concurrency, HTTP, and tooling reference.
    - [`02_methods_and_receivers/main.go`](lessons/05_structs_methods_interfaces/02_methods_and_receivers/main.go) — value and pointer receivers
    - [`03_composition_and_interfaces/main.go`](lessons/05_structs_methods_interfaces/03_composition_and_interfaces/main.go) — embedding, composition, and interfaces
    - [`04_iota_and_nil_interfaces/main.go`](lessons/05_structs_methods_interfaces/04_iota_and_nil_interfaces/main.go) — enum-like constants and nil interfaces
-6. **[Errors, Files, JSON and Time](lessons/06_errors_files_json/)**
+6. **[Errors, Files, Directories, JSON and Time](lessons/06_errors_files_json/)**
    - [`01_error_values_and_sentinels/main.go`](lessons/06_errors_files_json/01_error_values_and_sentinels/main.go) — explicit and sentinel errors
    - [`02_wrapping_and_inspecting_errors/main.go`](lessons/06_errors_files_json/02_wrapping_and_inspecting_errors/main.go) — `%w`, `errors.Is`, and `errors.As`
    - [`03_files_and_defer/main.go`](lessons/06_errors_files_json/03_files_and_defer/main.go) — files, buffered I/O, paths, and `defer`
    - [`04_json_encoding_and_validation/main.go`](lessons/06_errors_files_json/04_json_encoding_and_validation/main.go) — JSON tags and boundary validation
    - [`05_time_durations_and_clocks/main.go`](lessons/06_errors_files_json/05_time_durations_and_clocks/main.go) — durations, instants, UTC, RFC 3339, and clock seams
+   - [`06_directory_operations/main.go`](lessons/06_errors_files_json/06_directory_operations/main.go) — directory creation, listing, traversal, moves, and safe cleanup
 7. **[Packages, Modules and Generics](lessons/07_packages_and_generics/)**
    - [`01_package_organization/main.go`](lessons/07_packages_and_generics/01_package_organization/main.go) — packages, exports, and `internal`
    - [`02_generic_helpers/main.go`](lessons/07_packages_and_generics/02_generic_helpers/main.go) — type parameters and constraints

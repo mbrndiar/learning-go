@@ -5,16 +5,16 @@ independently.
 
 ## 🗂️ Modules
 
-1. [`01_basics/`](01_basics/)
-2. [`02_control_flow/`](02_control_flow/)
-3. [`03_functions_and_pointers/`](03_functions_and_pointers/)
-4. [`04_collections/`](04_collections/)
-5. [`05_structs_methods_interfaces/`](05_structs_methods_interfaces/)
-6. [`06_errors_files_json/`](06_errors_files_json/)
-7. [`07_packages_and_generics/`](07_packages_and_generics/)
-8. [`08_testing/`](08_testing/)
-9. [`09_tooling_cli_observability/`](09_tooling_cli_observability/)
-10. [`10_concurrency/`](10_concurrency/)
+1. [`01_basics/`](01_basics/) — values, types, operators, Unicode, bytes, and runes.
+2. [`02_control_flow/`](02_control_flow/) — Boolean conditions, switches, loops, range, and labels.
+3. [`03_functions_and_pointers/`](03_functions_and_pointers/) — functions, closures, recursion, value semantics, and pointers.
+4. [`04_collections/`](04_collections/) — arrays, slices, maps, copying, mutation, and deterministic sorting.
+5. [`05_structs_methods_interfaces/`](05_structs_methods_interfaces/) — structs, receivers, composition, interfaces, `iota`, and typed nils.
+6. [`06_errors_files_json/`](06_errors_files_json/) — errors, resource cleanup, files, directories, JSON, durations, and timestamps.
+7. [`07_packages_and_generics/`](07_packages_and_generics/) — packages, modules, generics, iterators, and abstraction trade-offs.
+8. [`08_testing/`](08_testing/) — unit/table tests, helpers, `httptest`, examples, benchmarks, coverage, and fuzzing.
+9. [`09_tooling_cli_observability/`](09_tooling_cli_observability/) — Go tooling, testable CLIs, structured logging, race detection, profiling, and debugging.
+10. [`10_concurrency/`](10_concurrency/) — goroutines, channels, synchronization, worker pools, contexts, and lifecycle.
 11. [`11_sql_and_sqlite/`](11_sql_and_sqlite/) — relational modeling,
     parameterized SQL, transactions, and repositories with SQLite.
 12. [`12_rest_apis_and_clients/`](12_rest_apis_and_clients/) — strict HTTP
