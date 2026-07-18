@@ -35,7 +35,7 @@ State is derived from probes; it is not task CRUD or a generic SQLite KV API.
 | --- | --- |
 | [Modules 1–4](../../lessons/README.md) | Use Go values, control flow, functions, slices/maps, UTF-8 strings, and stable sorting for configuration and reports. |
 | [Module 5: structs, methods, interfaces](../../lessons/05_structs_methods_interfaces/README.md) | Model targets/results/transitions and define small consumer-owned capabilities. |
-| [Module 6: errors, files, JSON](../../lessons/06_errors_files_json/README.md) | Wrap explicit errors, validate JSON configuration, own response/file cleanup with `defer`, and preserve causes. |
+| [Module 6: errors, files, JSON, time](../../lessons/06_errors_files_json/README.md) | Wrap explicit errors, validate JSON configuration, own response/file cleanup with `defer`, preserve causes, and distinguish durations from UTC-normalized timestamps and test clocks. |
 | [Module 7: packages and generics](../../lessons/07_packages_and_generics/README.md) | Organize packages and use generic helpers only where they improve a real boundary. |
 | [Module 8: testing](../../lessons/08_testing/README.md) | Write table tests, helpers/cleanup, `httptest`, examples, fuzz seeds, and coverage checks. |
 | [Module 9: tooling, CLI, observability](../../lessons/09_tooling_cli_observability/README.md) | Use standard flags, `slog`, race detection, vet, staticcheck, and profiling-aware design. |
@@ -380,8 +380,10 @@ loopback listeners, or elapsed-time performance assertions are permitted.
   leak packages, Prometheus clients, and database packages. No new pin is
   proposed.
 
-The required solution is portable across the Go-supported Linux, macOS, and
-Windows environments. Signal tests may be Unix-specific smoke tests, but core
+The required solution uses portable Go APIs and is intended to work on
+Go-supported Linux, macOS, and Windows environments. The repository verifies
+the full capstone workflow on Ubuntu only, so it does not claim validated
+cross-platform parity. Signal tests may be Unix-specific smoke tests, but core
 shutdown acceptance uses contexts and does not require a POSIX signal.
 
 ## Exclusions

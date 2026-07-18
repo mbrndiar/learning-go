@@ -51,6 +51,9 @@ go build ./lessons/02_control_flow/...
 
 - `if`/`else if`/`else` chains and the `if init; condition { }` form, whose
   declared variables are scoped only to that chain.
+- Conditions must have type `bool`. Go has no implicit truthiness for numbers,
+  strings, pointers, slices, or maps; compare explicitly with `0`, `""`, or
+  `nil`.
 - Variable shadowing: a variable declared inside an `if`'s init clause with
   `:=` is a new variable, even if it shares a name with an outer variable.
 - `switch` without `fallthrough` by default (each case exits automatically),
@@ -77,6 +80,8 @@ go build ./lessons/02_control_flow/...
   keyword if you truly want that behavior.
 - Expecting an `if init; condition` variable to be visible after the
   `if`/`else` chain ends. It is scoped only to that chain.
+- Writing `if count` or `if name` as in a language with truthy/falsy values.
+  Go requires a Boolean condition such as `count != 0` or `name != ""`.
 - Mutating the loop variable from `for _, v := range slice` and expecting
   the original slice to change. `v` is a copy; index into the slice
   (`slice[i]`) to mutate it in place.
@@ -99,6 +104,8 @@ go build ./lessons/02_control_flow/...
 5. If you range over `[]int{1, 2, 3}` with `for _, v := range numbers` and
    set `v = 0` inside the loop, what does `numbers` look like afterward, and
    why?
+6. Why does `if count { ... }` fail to compile in Go, and what explicit
+   condition should replace it?
 
 Previous: [Module 1 — Basics](../01_basics/README.md). Next:
 [Module 3 — Functions and Pointers](../03_functions_and_pointers/README.md).

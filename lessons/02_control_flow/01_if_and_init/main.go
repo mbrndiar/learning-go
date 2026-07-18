@@ -20,6 +20,16 @@ func main() {
 		fmt.Println("it's cold")
 	}
 
+	fmt.Println("--- conditions must be bool ---")
+	// Go has no truthy or falsy integers, strings, pointers, or collections.
+	// An if condition must already have type bool, so compare explicitly.
+	items := 2
+	if items != 0 {
+		fmt.Println("the collection has work to do")
+	}
+	// `if items { ... }` would not compile, even though similar code is
+	// accepted by languages that define zero as false.
+
 	fmt.Println("--- if with an initialization statement ---")
 	// The syntax "if init; condition { }" runs init first, then checks
 	// condition. Any variable declared in init is scoped ONLY to the if,

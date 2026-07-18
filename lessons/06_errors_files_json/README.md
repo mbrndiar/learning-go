@@ -1,4 +1,4 @@
-# 🧯 Module 6 — Errors, Files and JSON
+# 🧯 Module 6 — Errors, Files, JSON and Time
 
 This module treats failure as data. You will model errors as ordinary values,
 wrap them with context while keeping them inspectable, manage resources
@@ -17,7 +17,9 @@ By the end of this module you will be able to:
 - read and write files with `os`, `io`, and `bufio`, and build paths safely
   with `path/filepath`; and
 - encode and decode JSON with struct tags, and validate decoded data at a
-  program's boundary.
+  program's boundary;
+- parse and format RFC 3339 timestamps, normalize instants to UTC, work with
+  `time.Duration`, and inject a clock when tests need deterministic time.
 
 ## 📦 Lessons
 
@@ -31,6 +33,9 @@ By the end of this module you will be able to:
 4. [`04_json_encoding_and_validation/`](04_json_encoding_and_validation/) —
    JSON struct tags, `json.Marshal`/`Unmarshal`, `json.Decoder`, boundary
    validation of decoded values.
+5. [`05_time_durations_and_clocks/`](05_time_durations_and_clocks/) —
+   durations, instants and locations, RFC 3339, UTC normalization, elapsed
+   time, and a testable clock seam.
 
 ## ▶️ How to run a lesson
 
@@ -41,6 +46,7 @@ go run ./lessons/06_errors_files_json/01_error_values_and_sentinels
 go run ./lessons/06_errors_files_json/02_wrapping_and_inspecting_errors
 go run ./lessons/06_errors_files_json/03_files_and_defer
 go run ./lessons/06_errors_files_json/04_json_encoding_and_validation
+go run ./lessons/06_errors_files_json/05_time_durations_and_clocks
 ```
 
 Predict the output of each program first, especially the `defer` ordering and
@@ -72,6 +78,12 @@ the strict-versus-lenient JSON decoding cases, then run it to check.
   `json.Unmarshal` silently ignores fields it does not recognize, which
   hides typos. Use `json.NewDecoder(...).DisallowUnknownFields()` when input
   should be rejected instead of silently truncated.
+- **Comparing `time.Time` values with `==`.** That operator also compares the
+  location and monotonic-clock metadata. Use `t.Equal(u)` when the question is
+  whether two values represent the same instant.
+- **Persisting local display time without an offset.** Use a standard such as
+  RFC 3339 and normally normalize machine-facing timestamps to UTC; convert to
+  a user's location only at the presentation boundary.
 
 ## ❓ Review questions
 
@@ -86,3 +98,8 @@ the strict-versus-lenient JSON decoding cases, then run it to check.
 5. What is the difference in behavior between `json.Unmarshal` and a
    `json.Decoder` configured with `DisallowUnknownFields`?
 6. Why is validating decoded JSON a separate step from decoding itself?
+7. What is the difference between a `time.Time` instant and the location used
+   to display it, and why does `Time.Equal` usually express intent better than
+   `==`?
+8. Why should elapsed work use durations/monotonic clock readings while
+   persisted timestamps use a wall-clock representation such as RFC 3339?

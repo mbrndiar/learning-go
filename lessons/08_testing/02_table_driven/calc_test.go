@@ -53,6 +53,9 @@ func TestDivide(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Divide(%g, %g) returned unexpected error: %v", test.a, test.b, err)
 			}
+			// These expected results (5 and 0.25) are exactly representable in
+			// binary floating point. For arbitrary computed floats, compare
+			// with a tolerance chosen for the problem instead.
 			if got != test.want {
 				t.Errorf("Divide(%g, %g) = %g, want %g", test.a, test.b, got, test.want)
 			}

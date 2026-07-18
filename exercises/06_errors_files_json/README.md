@@ -1,7 +1,9 @@
-# 🗂️ 06 — Errors, Files, and JSON
+# 🗂️ 06 — Errors, Files, JSON, and Time
 
 Persist a small address book to a JSON file to practice typed errors, error
 wrapping, `defer`-based resource cleanup, file I/O, and JSON validation.
+The final three helpers practice timestamps and elapsed durations without
+changing the address-book format.
 
 ## ▶️ Workflow
 
@@ -39,6 +41,15 @@ genuine attempt.
    `FindByEmail(contacts []Contact, email string) (Contact, error)`, wrapping
    `ErrNotFound` with `%w` and including the email in the message when nothing
    matches.
+7. Implement `ParseTimestamp(raw string) (time.Time, error)` with
+   `time.Parse(time.RFC3339, raw)`. Wrap parse failures with `%w` so callers can
+   recover `*time.ParseError` with `errors.As`.
+8. Implement `FormatTimestampUTC(value time.Time) string`, normalizing the
+   instant with `UTC()` before formatting it with `time.RFC3339`.
+9. Using the provided `ErrEndBeforeStart`, implement
+   `Elapsed(start, end time.Time) (time.Duration, error)`. Return `end.Sub(start)`
+   when the interval is non-negative; otherwise return
+   `ErrEndBeforeStart`.
 
 ## 🔍 What this covers
 
@@ -49,6 +60,8 @@ genuine attempt.
   paths.
 - Reading and writing files and JSON with the standard library.
 - Validating data before performing I/O.
+- RFC 3339 timestamp parsing, UTC normalization, elapsed durations, and
+  `Time.Equal`-based instant comparisons in tests.
 
 ## ⚠️ Common mistakes
 
@@ -60,3 +73,5 @@ genuine attempt.
   `Create`, which leaks the file handle on early returns.
 - Validating contacts only after creating the output file, leaving a
   truncated or partial file behind on a validation failure.
+- Comparing `time.Time` with `==` when the intent is to compare instants, or
+  persisting a local display time without an offset.

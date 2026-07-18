@@ -63,6 +63,10 @@ go build ./lessons/01_basics/...
 - Static typing and explicit conversion, including truncation
   (`int(floatValue)`) and overflow when converting to a smaller integer type
   (`byte`).
+- Binary floating-point as an approximation for most decimal fractions,
+  tolerance-based comparison, `NaN`/infinity checks, and why exact decimal
+  accounting should use a different representation such as fixed-scale
+  integers.
 - Arithmetic (`+ - * / %`), comparison (`== != < <= > >=`), logical
   (`&& ||`, with short-circuit evaluation), bitwise (`& | ^ &^ << >>`), and
   compound assignment (`+= *=`) operators.
@@ -85,6 +89,10 @@ go build ./lessons/01_basics/...
 - Assuming a smaller integer type (like `byte`) can hold any value assigned
   to it. Converting a value that does not fit wraps around silently instead
   of raising an error.
+- Comparing arbitrary computed `float64` values with `==`, or using binary
+  floating point for exact decimal accounting. Choose a domain-specific
+  tolerance for approximate measurements and a decimal/fixed-scale model when
+  exact decimal values are required.
 - Trying to modify a string in place, such as `s[0] = 'H'`. Strings are
   immutable; build a new string instead (via `strings` functions, a
   `[]byte`/`[]rune` conversion, or `strings.Builder`).
@@ -99,5 +107,7 @@ go build ./lessons/01_basics/...
 4. Why can `len("héllo")` return a number larger than the number of visible
    characters in the string?
 5. What happens if you convert the `int` value `300` to a `byte`, and why?
+6. Why can `0.1 + 0.2` differ from the nearest `float64` representation of
+   `0.3`, and why is one fixed epsilon not correct for every calculation?
 
 Next: [Module 2 — Control Flow](../02_control_flow/README.md).

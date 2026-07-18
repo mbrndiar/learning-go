@@ -11,6 +11,11 @@ const maxRetries = 3
 Zero values: numbers `0`, booleans `false`, strings `""`, and pointers,
 slices, maps, channels, functions, and interfaces `nil`.
 
+Most decimal fractions are approximations in `float64`. Compare arbitrary
+computed floats with a tolerance chosen for the problem, use `math.IsNaN` /
+`math.IsInf` for special values, and use a fixed-scale or decimal model when
+exact decimal accounting is required.
+
 ## Control flow
 
 ```go
@@ -31,6 +36,9 @@ default:
     fmt.Println("wait")
 }
 ```
+
+Conditions must have type `bool`; Go has no implicit truthiness. Write
+`count != 0`, `name != ""`, or `pointer != nil`.
 
 ## Functions, pointers, and errors
 
@@ -157,6 +165,23 @@ if err := row.Scan(&task.ID, &task.Title); err != nil {
 Pass values as query arguments, close multi-row results, check `rows.Err()`,
 and `defer tx.Rollback()` immediately after `BeginTx`. SQLite `PRAGMA` settings
 and `:memory:` connection behavior are database-specific.
+
+## Time
+
+```go
+instant, err := time.Parse(time.RFC3339, raw)
+if err != nil {
+    return err
+}
+utc := instant.UTC().Format(time.RFC3339)
+deadline := instant.Add(30 * time.Second)
+elapsed := deadline.Sub(instant)
+sameInstant := instant.Equal(deadline.Add(-30 * time.Second))
+```
+
+Use `time.Duration` for elapsed intervals and RFC 3339 with an explicit offset
+for machine-facing timestamps. Prefer `Time.Equal` to `==` when comparing
+instants. Inject a small clock interface when tests must control "now".
 
 ## HTTP and JSON
 

@@ -14,6 +14,7 @@ By the end of the course, you will be able to:
   maps, structs, methods, interfaces, and generics;
 - model failures with explicit error values and manage resources with `defer`;
 - read and write files and exchange structured data with JSON;
+- work with durations, UTC-normalized timestamps, and testable clock boundaries;
 - organize code into packages and manage dependencies with Go modules;
 - write table-driven tests, benchmarks, fuzz targets, and HTTP tests;
 - build command-line programs and structured logs;
@@ -28,6 +29,12 @@ By the end of the course, you will be able to:
 - Most lessons use the standard library. Module 11 and the comparative capstone
   use the pinned pure-Go SQLite driver; Module 12 adds pinned Chi, Gin, and
   Resty examples.
+
+The complete repository workflow is verified on Ubuntu through GitHub Actions.
+The Go packages are written for Go-supported operating systems, but the course
+does not claim full macOS or Windows workflow parity: the coverage recipe uses
+Bash and GNU `find`. On Windows, use WSL or an equivalent Unix-like environment
+for the exact documented CI commands.
 
 See [`docs/SETUP.md`](docs/SETUP.md) for installation, editor setup, toolchain
 selection, and troubleshooting.
@@ -140,11 +147,12 @@ concurrency, HTTP, and tooling reference.
    - [`02_methods_and_receivers/main.go`](lessons/05_structs_methods_interfaces/02_methods_and_receivers/main.go) — value and pointer receivers
    - [`03_composition_and_interfaces/main.go`](lessons/05_structs_methods_interfaces/03_composition_and_interfaces/main.go) — embedding, composition, and interfaces
    - [`04_iota_and_nil_interfaces/main.go`](lessons/05_structs_methods_interfaces/04_iota_and_nil_interfaces/main.go) — enum-like constants and nil interfaces
-6. **[Errors, Files and JSON](lessons/06_errors_files_json/)**
+6. **[Errors, Files, JSON and Time](lessons/06_errors_files_json/)**
    - [`01_error_values_and_sentinels/main.go`](lessons/06_errors_files_json/01_error_values_and_sentinels/main.go) — explicit and sentinel errors
    - [`02_wrapping_and_inspecting_errors/main.go`](lessons/06_errors_files_json/02_wrapping_and_inspecting_errors/main.go) — `%w`, `errors.Is`, and `errors.As`
    - [`03_files_and_defer/main.go`](lessons/06_errors_files_json/03_files_and_defer/main.go) — files, buffered I/O, paths, and `defer`
    - [`04_json_encoding_and_validation/main.go`](lessons/06_errors_files_json/04_json_encoding_and_validation/main.go) — JSON tags and boundary validation
+   - [`05_time_durations_and_clocks/main.go`](lessons/06_errors_files_json/05_time_durations_and_clocks/main.go) — durations, instants, UTC, RFC 3339, and clock seams
 7. **[Packages, Modules and Generics](lessons/07_packages_and_generics/)**
    - [`01_package_organization/main.go`](lessons/07_packages_and_generics/01_package_organization/main.go) — packages, exports, and `internal`
    - [`02_generic_helpers/main.go`](lessons/07_packages_and_generics/02_generic_helpers/main.go) — type parameters and constraints

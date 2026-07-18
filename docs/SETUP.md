@@ -14,6 +14,14 @@ release. This course declares Go 1.25 as its language minimum, but security and
 vulnerability checks require a current patch release, not the original
 `go1.25.0` toolchain.
 
+### Supported environment
+
+GitHub Actions verifies the complete workflow on Ubuntu with Go 1.25.x and
+1.26.x. The lesson and project packages use portable Go APIs where practical,
+but full macOS and Windows workflow parity is not claimed: the comparative
+coverage recipe uses Bash and GNU `find`. Windows learners should use WSL or an
+equivalent Unix-like environment when reproducing every CI command exactly.
+
 ## 2. Get the code
 
 ```bash
