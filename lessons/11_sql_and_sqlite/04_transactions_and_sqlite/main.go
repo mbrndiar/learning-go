@@ -26,6 +26,8 @@ func openDatabase(ctx context.Context) (*sql.DB, error) {
 		db.Close()
 		return nil, err
 	}
+	// modernc.org/sqlite accepts multiple statements in one ExecContext. This
+	// convenience is driver-specific; other drivers may require separate calls.
 	_, err = db.ExecContext(ctx, `
 CREATE TABLE accounts (name TEXT PRIMARY KEY, balance INTEGER NOT NULL CHECK(balance >= 0));
 INSERT INTO accounts(name, balance) VALUES ('alice', 100), ('bob', 20);`)

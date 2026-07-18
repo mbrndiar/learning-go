@@ -6,7 +6,8 @@ import (
 	"errors"
 )
 
-// ErrNotImplemented marks an intentional harness placeholder.
+// ErrNotImplemented marks the incomplete boundary used by the starter harness.
+// The complete solution retains the symbol for API parity but never returns it.
 var ErrNotImplemented = errors.New("comparative kvstore: not implemented")
 
 // Implemented reports whether the harness placeholders have been replaced.

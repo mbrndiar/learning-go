@@ -6,6 +6,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
@@ -135,6 +136,25 @@ func TestInternalHistoryErrorsAndLogging(t *testing.T) {
 	m4.Request(t, api.NewHandler(nil, nil), http.MethodGet, "/v1/targets", http.StatusInternalServerError)
 }
 
+func TestResponseEncodingFailureIsLogged(t *testing.T) {
+	var logs bytes.Buffer
+	logger := slog.New(slog.NewJSONHandler(&logs, nil))
+	handler := api.NewHandlerWithOptions(history.NewMemoryStore(2), nil, api.Options{
+		HistoryLimit: 2,
+		Logger:       logger,
+	})
+	writer := &failingResponseWriter{header: make(http.Header)}
+	handler.ServeHTTP(writer, httptest.NewRequest(http.MethodGet, "/healthz", nil))
+
+	if writer.status != http.StatusOK {
+		t.Fatalf("status = %d, want %d", writer.status, http.StatusOK)
+	}
+	if !strings.Contains(logs.String(), `"msg":"encode HTTP response"`) ||
+		!strings.Contains(logs.String(), `"error":"fixture response write failure"`) {
+		t.Fatalf("logs = %q", logs.String())
+	}
+}
+
 func record(t *testing.T, store *history.MemoryStore, observation domain.Observation) {
 	t.Helper()
 	if err := store.Record(observation); err != nil {
@@ -154,4 +174,21 @@ func (errorStore) Current() []domain.Observation {
 
 func (errorStore) History(string, int) ([]domain.Observation, error) {
 	return nil, errors.New("fixture history failure")
+}
+
+type failingResponseWriter struct {
+	header http.Header
+	status int
+}
+
+func (writer *failingResponseWriter) Header() http.Header {
+	return writer.header
+}
+
+func (writer *failingResponseWriter) WriteHeader(status int) {
+	writer.status = status
+}
+
+func (*failingResponseWriter) Write([]byte) (int, error) {
+	return 0, errors.New("fixture response write failure")
 }

@@ -105,44 +105,44 @@ func (handler *handler) ServeHTTP(writer http.ResponseWriter, request *http.Requ
 	switch {
 	case request.URL.Path == "/healthz":
 		if request.Method != http.MethodGet {
-			status = methodNotAllowed(writer)
+			status = handler.methodNotAllowed(writer)
 			return
 		}
 		if handler.state.Stopping() {
 			status = http.StatusServiceUnavailable
-			writeJSON(writer, status, map[string]string{"status": "stopping"})
+			handler.writeJSON(writer, status, map[string]string{"status": "stopping"})
 			return
 		}
-		writeJSON(writer, status, map[string]string{"status": "ok"})
+		handler.writeJSON(writer, status, map[string]string{"status": "ok"})
 	case request.URL.Path == "/v1/targets":
 		if request.Method != http.MethodGet {
-			status = methodNotAllowed(writer)
+			status = handler.methodNotAllowed(writer)
 			return
 		}
 		if handler.state.Stopping() {
-			status = serviceStopping(writer)
+			status = handler.serviceStopping(writer)
 			return
 		}
 		status = handler.serveTargets(writer)
 	case strings.HasPrefix(request.URL.Path, "/v1/history/"):
 		if request.Method != http.MethodGet {
-			status = methodNotAllowed(writer)
+			status = handler.methodNotAllowed(writer)
 			return
 		}
 		if handler.state.Stopping() {
-			status = serviceStopping(writer)
+			status = handler.serviceStopping(writer)
 			return
 		}
 		status = handler.serveHistory(writer, request)
 	default:
 		status = http.StatusNotFound
-		writeError(writer, status, "not_found", "route was not found")
+		handler.writeError(writer, status, "not_found", "route was not found")
 	}
 }
 
 func (handler *handler) serveTargets(writer http.ResponseWriter) int {
 	if handler.store == nil {
-		writeError(writer, http.StatusInternalServerError, "history_error", "current state is unavailable")
+		handler.writeError(writer, http.StatusInternalServerError, "history_error", "current state is unavailable")
 		return http.StatusInternalServerError
 	}
 	current := handler.store.Current()
@@ -160,7 +160,7 @@ func (handler *handler) serveTargets(writer http.ResponseWriter) int {
 		}
 		response.Targets = append(response.Targets, state)
 	}
-	writeJSON(writer, http.StatusOK, response)
+	handler.writeJSON(writer, http.StatusOK, response)
 	return http.StatusOK
 }
 
@@ -168,11 +168,11 @@ func (handler *handler) serveHistory(writer http.ResponseWriter, request *http.R
 	escapedName := strings.TrimPrefix(request.URL.EscapedPath(), "/v1/history/")
 	name, err := url.PathUnescape(escapedName)
 	if err != nil || name == "" || strings.Contains(name, "/") {
-		writeError(writer, http.StatusNotFound, "not_found", "route was not found")
+		handler.writeError(writer, http.StatusNotFound, "not_found", "route was not found")
 		return http.StatusNotFound
 	}
 	if _, exists := handler.configured[name]; !exists {
-		writeError(
+		handler.writeError(
 			writer,
 			http.StatusNotFound,
 			"target_not_found",
@@ -182,22 +182,22 @@ func (handler *handler) serveHistory(writer http.ResponseWriter, request *http.R
 	}
 	limit, err := handler.parseLimit(request)
 	if err != nil {
-		writeError(writer, http.StatusBadRequest, "invalid_limit", err.Error())
+		handler.writeError(writer, http.StatusBadRequest, "invalid_limit", err.Error())
 		return http.StatusBadRequest
 	}
 	if handler.store == nil {
-		writeError(writer, http.StatusInternalServerError, "history_error", "history is unavailable")
+		handler.writeError(writer, http.StatusInternalServerError, "history_error", "history is unavailable")
 		return http.StatusInternalServerError
 	}
 	observations, err := handler.store.History(name, limit)
 	if err != nil {
-		writeError(writer, http.StatusInternalServerError, "history_error", "history is unavailable")
+		handler.writeError(writer, http.StatusInternalServerError, "history_error", "history is unavailable")
 		return http.StatusInternalServerError
 	}
 	if observations == nil {
 		observations = []domain.Observation{}
 	}
-	writeJSON(writer, http.StatusOK, domain.HistoryResponse{
+	handler.writeJSON(writer, http.StatusOK, domain.HistoryResponse{
 		Target:       name,
 		Observations: observations,
 	})
@@ -219,24 +219,26 @@ func (handler *handler) parseLimit(request *http.Request) (int, error) {
 	return limit, nil
 }
 
-func methodNotAllowed(writer http.ResponseWriter) int {
+func (handler *handler) methodNotAllowed(writer http.ResponseWriter) int {
 	writer.Header().Set("Allow", http.MethodGet)
-	writeError(writer, http.StatusMethodNotAllowed, "method_not_allowed", "method must be GET")
+	handler.writeError(writer, http.StatusMethodNotAllowed, "method_not_allowed", "method must be GET")
 	return http.StatusMethodNotAllowed
 }
 
-func serviceStopping(writer http.ResponseWriter) int {
-	writeError(writer, http.StatusServiceUnavailable, "stopping", "service is stopping")
+func (handler *handler) serviceStopping(writer http.ResponseWriter) int {
+	handler.writeError(writer, http.StatusServiceUnavailable, "stopping", "service is stopping")
 	return http.StatusServiceUnavailable
 }
 
-func writeError(writer http.ResponseWriter, status int, code, message string) {
-	writeJSON(writer, status, domain.ErrorResponse{
+func (handler *handler) writeError(writer http.ResponseWriter, status int, code, message string) {
+	handler.writeJSON(writer, status, domain.ErrorResponse{
 		Error: domain.APIError{Code: code, Message: message},
 	})
 }
 
-func writeJSON(writer http.ResponseWriter, status int, value any) {
+func (handler *handler) writeJSON(writer http.ResponseWriter, status int, value any) {
 	writer.WriteHeader(status)
-	_ = json.NewEncoder(writer).Encode(value)
+	if err := json.NewEncoder(writer).Encode(value); err != nil {
+		handler.logger.Error("encode HTTP response", "error", err)
+	}
 }

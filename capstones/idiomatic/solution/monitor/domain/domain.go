@@ -14,7 +14,8 @@ import (
 )
 
 var (
-	// ErrNotImplemented marks an intentional starter placeholder.
+	// ErrNotImplemented marks the incomplete boundary used by the starter harness.
+	// The complete solution retains the symbol for API parity but never returns it.
 	ErrNotImplemented = errors.New("health monitor: not implemented")
 	// ErrInvalidConfig identifies malformed or invalid configuration.
 	ErrInvalidConfig = errors.New("invalid monitor configuration")

@@ -6,8 +6,12 @@ not five unrelated applications.
 
 This required project belongs after Module 12 and before the final
 [`capstones`](../../capstones/README.md). Finish the prerequisite course modules,
-especially file/directory ownership and JSON, SQL/SQLite, HTTP, CLI, testing,
-contexts, and resource cleanup, before starting.
+especially [file/directory ownership, JSON, and resource cleanup](../../lessons/06_errors_files_json/README.md),
+[testing](../../lessons/08_testing/README.md),
+[CLI](../../lessons/09_tooling_cli_observability/README.md),
+[contexts](../../lessons/10_concurrency/README.md),
+[SQL/SQLite](../../lessons/11_sql_and_sqlite/README.md), and
+[HTTP](../../lessons/12_rest_apis_and_clients/README.md), before starting.
 
 The `solution/` tree is complete: all three servers, both clients, both
 repositories, the CLI, OpenAPI checks, and the full interoperability matrix are

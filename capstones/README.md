@@ -76,3 +76,5 @@ failing exercise starters—see [`docs/QUALITY.md`](../docs/QUALITY.md).
   mistaken for a completed capstone.
 - Change `domain.Implemented` to `true` only when replacing every placeholder
   covered by the harness.
+- Complete solutions retain `domain.ErrNotImplemented` only to preserve the
+  matching exported surface; solution code never returns it.
